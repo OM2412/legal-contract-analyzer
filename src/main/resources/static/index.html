@@ -253,6 +253,7 @@
   Print / Save as PDF
 </button>
       <div class="muted">Read each quote against the original document before relying on a result.</div>
+      <div id="documentIdentity" class="muted" style="margin-top: 14px; overflow-wrap: anywhere"></div>
 
       <div class="summary">
         <div class="metric"><small>Overall review</small><strong id="reviewStatus"></strong></div>
@@ -308,6 +309,7 @@
   const aiButton = document.getElementById("aiButton");
   const aiStatus = document.getElementById("aiStatus");
   const aiResults = document.getElementById("aiResults");
+  const documentIdentity = document.getElementById("documentIdentity");
   const aiComparison = document.getElementById("aiComparison");
 
   let reviewedFiles = null;
@@ -484,6 +486,22 @@ function showCandidateComparison(agreementData, sowData) {
 
     return data;
   }
+  function showDocumentIdentity(agreementFile, sowFile, data) {
+  documentIdentity.replaceChildren();
+
+  const documents = [
+    ["Agreement", agreementFile, data.agreementVersion],
+    ["SOW", sowFile, data.sowVersion]
+  ];
+
+  for (const [label, file, version] of documents) {
+    const line = document.createElement("div");
+    line.textContent =
+      `${label}: ${file.name} · Extracted text: ` +
+      (version ?? "Version unavailable");
+    documentIdentity.append(line);
+  }
+}
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -527,6 +545,7 @@ aiComparison.textContent = "";
       showEvidence("agreement", data.agreementEvidence);
       showEvidence("sow", data.sowEvidence);
       showPrecedenceEvidence(data.precedenceEvidence);
+      showDocumentIdentity(agreementFile, sowFile, data);
 
       reviewedFiles = { agreementFile, sowFile };
       aiButton.disabled = false;
