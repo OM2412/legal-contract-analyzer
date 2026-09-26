@@ -1,0 +1,1 @@
+Provider will issue an invoice for the project fee. Client must pay that invoice within 45 calendar days of receiving it.

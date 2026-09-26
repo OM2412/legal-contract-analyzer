@@ -1,0 +1,12 @@
+/target/
+/.idea/
+/.vscode/
+*.iml
+*.log
+.DS_Store
+Thumbs.db
+
+# Keep real contracts and exported reports out of Git.
+/private-documents/
+/uploads/
+/reports/

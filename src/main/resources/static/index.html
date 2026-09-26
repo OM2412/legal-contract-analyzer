@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contract Payment Review</title>
+  <style>
+    :root {
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      color: #17212f;
+      background: #f4f6f5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #122b35;
+      color: #fff;
+      padding: 34px max(24px, calc((100vw - 1080px) / 2));
+    }
+
+    header p {
+      margin: 0 0 9px;
+      color: #aee4d1;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 42px);
+      letter-spacing: -.035em;
+    }
+
+    header span {
+      display: block;
+      max-width: 650px;
+      margin-top: 12px;
+      color: #d4e0df;
+      line-height: 1.6;
+    }
+
+    main {
+      max-width: 1080px;
+      margin: 30px auto 70px;
+      padding: 0 24px;
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid #e1e7e5;
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 8px 24px #17212f0a;
+    }
+
+    h2 { margin: 0 0 10px; font-size: 21px; }
+    h3 { margin: 0 0 14px; font-size: 18px; }
+
+    .muted {
+      color: #5b6a72;
+      line-height: 1.55;
+    }
+
+    .files, .cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .files { margin: 24px 0; }
+
+    label {
+      display: block;
+      font-weight: 700;
+    }
+
+    input[type="file"] {
+      display: block;
+      width: 100%;
+      margin-top: 9px;
+      padding: 14px;
+      border: 1px dashed #a6bbb7;
+      border-radius: 10px;
+      background: #f8fbfa;
+      font: inherit;
+      font-weight: 400;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 13px 22px;
+      background: #087a67;
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover { background: #066453; }
+    button:disabled { opacity: .6; cursor: wait; }
+
+    #error {
+      margin-top: 16px;
+      color: #a22f29;
+      font-weight: 600;
+    }
+
+    #results { margin-top: 24px; }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .metric {
+      padding: 17px;
+      border-radius: 11px;
+      background: #f1f6f4;
+    }
+
+    .metric small {
+      display: block;
+      margin-bottom: 8px;
+      color: #53636b;
+    }
+
+    .metric strong {
+      overflow-wrap: anywhere;
+    }
+
+    .cards { margin-top: 20px; }
+
+    blockquote {
+      margin: 14px 0 0;
+      padding: 16px;
+      border-left: 4px solid #087a67;
+      background: #f7faf9;
+      color: #283941;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .location {
+      margin-top: 12px;
+      color: #5b6a72;
+      font-size: 13px;
+    }
+
+    .notice {
+      margin-top: 22px;
+      padding: 14px 17px;
+      border-radius: 10px;
+      background: #fff4dc;
+      color: #5e471c;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 700px) {
+      .files, .cards, .summary {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media print {
+  body {
+    background: #fff;
+  }
+
+  header,
+  main > section:first-child,
+  #printButton,
+  #aiButton,
+  #aiStatus {
+    display: none !important;
+  }
+
+  main {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  #results {
+    margin: 0;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .panel {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+}
+  </style>
+</head>
+<body>
+  <header>
+    <p>Legal Contract Analyzer · Demo</p>
+    <h1>Contract payment review</h1>
+    <span>Upload an Agreement and a Statement of Work to compare supported payment clauses and inspect their source text.</span>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Upload documents</h2>
+      <div class="muted">Choose two text-based PDF or UTF-8 TXT files. Scanned PDFs need OCR and are not supported yet.</div>
+
+      <form id="reviewForm">
+        <div class="files">
+          <label for="agreement">
+            Agreement
+            <input id="agreement" name="agreement" type="file" accept=".pdf,.txt" required>
+          </label>
+          <label for="sow">
+            Statement of Work
+            <input id="sow" name="sow" type="file" accept=".pdf,.txt" required>
+          </label>
+        </div>
+        <label for="maxDays" style="margin-bottom: 20px">
+  Maximum calendar days after invoice receipt (demo policy)
+  <input
+    id="maxDays"
+    name="maxDays"
+    type="number"
+    min="1"
+    max="3650"
+    value="30"
+    required
+    style="display: block; width: 220px; margin-top: 9px;
+           padding: 12px; border: 1px solid #a6bbb7;
+           border-radius: 10px; font: inherit"
+  >
+</label>
+        <button id="submitButton" type="submit">Review payment terms</button>
+        <div id="error" role="alert"></div>
+      </form>
+    </section>
+
+    <section id="results" class="panel" hidden>
+      <h2>Review result</h2>
+      <button id="printButton" type="button" style="margin: 8px 0 16px">
+  Print / Save as PDF
+</button>
+      <div class="muted">Read each quote against the original document before relying on a result.</div>
+
+      <div class="summary">
+        <div class="metric"><small>Overall review</small><strong id="reviewStatus"></strong></div>
+        <div class="metric"><small>Term comparison</small><strong id="comparisonStatus"></strong></div>
+        <div class="metric"><small>Precedence scan</small><strong id="precedenceStatus"></strong></div>
+      </div>
+
+      <div class="cards">
+        <article class="panel">
+          <h3>Agreement</h3>
+          <div>Policy assessment: <strong id="agreementAssessment"></strong></div>
+          <blockquote id="agreementQuote"></blockquote>
+          <div id="agreementLocation" class="location"></div>
+        </article>
+
+        <article class="panel">
+          <h3>Statement of Work</h3>
+          <div>Policy assessment: <strong id="sowAssessment"></strong></div>
+          <blockquote id="sowQuote"></blockquote>
+          <div id="sowLocation" class="location"></div>
+        </article>
+      </div>
+<article class="panel" style="margin-top: 20px">
+  <h3>Payment priority wording</h3>
+  <div id="precedenceEvidence"></div>
+</article>
+<article class="panel" style="margin-top: 20px">
+  <h3>Local AI quote suggestions</h3>
+  <p class="muted">
+    AI sirf original document mein exact mile hue excerpts suggest karega.
+    Inka meaning aur relevance manually check karo.
+  </p>
+  <button id="aiButton" type="button">
+    Find suggested quotes
+  </button>
+  <p id="aiStatus" class="muted" role="status"></p>
+  <div id="aiResults"></div>
+  <div id="aiComparison" class="notice" hidden></div>
+</article>
+      <div class="notice">
+        Textual candidate assessment:
+        <strong id="candidateAssessment"></strong>.
+        <span id="notice"></span>
+      </div>
+    </section>
+  </main>
+
+ <script>
+  const form = document.getElementById("reviewForm");
+  const button = document.getElementById("submitButton");
+  const errorBox = document.getElementById("error");
+  const results = document.getElementById("results");
+  const aiButton = document.getElementById("aiButton");
+  const aiStatus = document.getElementById("aiStatus");
+  const aiResults = document.getElementById("aiResults");
+  const aiComparison = document.getElementById("aiComparison");
+
+  let reviewedFiles = null;
+
+  function readable(value) {
+    return value ? value.replaceAll("_", " ") : "Not assessed";
+  }
+
+  function setText(id, value) {
+    document.getElementById(id).textContent = value;
+  }
+
+  function showEvidence(prefix, evidence) {
+    setText(
+      prefix + "Quote",
+      evidence?.quote ?? "No supported payment clause recognized."
+    );
+
+    const location = evidence
+      ? (evidence.firstPage
+          ? `Page ${evidence.firstPage}` +
+            (evidence.lastPage !== evidence.firstPage
+              ? `–${evidence.lastPage}` : "")
+          : "TXT document") +
+        ` · Text offsets ${evidence.start}–${evidence.end}`
+      : "";
+
+    setText(prefix + "Location", location);
+  }
+
+  function showPrecedenceEvidence(items) {
+    const container = document.getElementById("precedenceEvidence");
+    container.replaceChildren();
+
+    if (!items || items.length === 0) {
+      container.textContent =
+        "No supported payment priority wording located.";
+      return;
+    }
+
+    for (const item of items) {
+      const quote = document.createElement("blockquote");
+      quote.textContent = item.quote;
+
+      const location = document.createElement("div");
+      location.className = "location";
+      location.textContent =
+        item.documentId +
+        (item.firstPage
+          ? ` · Page ${item.firstPage}` +
+            (item.lastPage !== item.firstPage
+              ? `–${item.lastPage}` : "")
+          : " · TXT document") +
+        ` · Text offsets ${item.start}–${item.end}`;
+
+      container.append(quote, location);
+    }
+  }
+
+  
+    function showAiGroup(label, data) {
+    const heading = document.createElement("h4");
+    heading.textContent = label;
+    aiResults.append(heading);
+
+    const evidenceList = data.evidence ?? [];
+    const candidates = data.candidates ?? [];
+
+    if (evidenceList.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = "No exact quote suggestion returned.";
+      aiResults.append(empty);
+      return;
+    }
+
+    for (const item of evidenceList) {
+      const quote = document.createElement("blockquote");
+      quote.textContent = item.quote;
+
+      const location = document.createElement("div");
+      location.className = "location";
+      location.textContent =
+        (item.firstPage
+          ? `Page ${item.firstPage}` +
+            (item.lastPage !== item.firstPage
+              ? `–${item.lastPage}` : "")
+          : "TXT document") +
+        ` · Text offsets ${item.start}–${item.end}`;
+
+      aiResults.append(quote, location);
+    }
+
+    for (const candidate of candidates) {
+      const card = document.createElement("div");
+      card.className = "notice";
+
+      const title = document.createElement("strong");
+      title.textContent =
+        `AI candidate: ${candidate.days} ` +
+        readable(candidate.dayUnit).toLowerCase();
+
+      const trigger = document.createElement("div");
+      trigger.textContent = candidate.invoiceReceiptConfirmed
+        ? "Invoice receipt: explicitly supported by the quote"
+        : "Invoice receipt: not independently verified";
+
+      const source = document.createElement("div");
+      source.className = "location";
+      source.textContent =
+        `Source: ${candidate.evidence.quote}`;
+
+      card.append(title, trigger, source);
+      aiResults.append(card);
+    }
+  }
+function showCandidateComparison(agreementData, sowData) {
+  aiComparison.hidden = true;
+  aiComparison.textContent = "";
+
+  const agreement = agreementData.candidates ?? [];
+  const sow = sowData.candidates ?? [];
+
+  if (agreement.length !== 1 || sow.length !== 1) {
+    return;
+  }
+
+  const a = agreement[0];
+  const s = sow[0];
+
+  if (a.dayUnit !== s.dayUnit) {
+    aiComparison.textContent =
+      "AI candidates use different day units. " +
+      "Their durations have not been compared.";
+  } else {
+    const unit = readable(a.dayUnit).toLowerCase();
+    const difference = Math.abs(s.days - a.days);
+
+    const comparison = s.days > a.days
+      ? `SOW candidate is ${difference} ${unit} longer.`
+      : s.days < a.days
+        ? `Agreement candidate is ${difference} ${unit} longer.`
+        : "Both candidates state the same duration.";
+
+    aiComparison.textContent =
+      `Preliminary AI candidate comparison: ` +
+      `Agreement ${a.days} ${unit}; SOW ${s.days} ${unit}. ` +
+      comparison;
+  }
+
+  if (!a.invoiceReceiptConfirmed || !s.invoiceReceiptConfirmed) {
+    aiComparison.textContent +=
+      " At least one invoice trigger is not independently verified.";
+  }
+
+  aiComparison.textContent +=
+    " This comparison does not determine policy compliance or legal priority.";
+  aiComparison.hidden = false;
+}
+  async function requestAiQuotes(file) {
+    const upload = new FormData();
+    upload.append("document", file);
+
+    const response = await fetch("/api/ai/quotes", {
+      method: "POST",
+      body: upload
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Local AI request failed.");
+    }
+
+    return data;
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    errorBox.textContent = "";
+    results.hidden = true;
+    reviewedFiles = null;
+    aiResults.replaceChildren();
+    aiComparison.hidden = true;
+aiComparison.textContent = "";
+    aiStatus.textContent = "";
+    aiButton.disabled = true;
+    button.disabled = true;
+    button.textContent = "Reviewing…";
+
+    try {
+      const agreementFile = form.elements.agreement.files[0];
+      const sowFile = form.elements.sow.files[0];
+
+      const response = await fetch("/api/review", {
+        method: "POST",
+        body: new FormData(form)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to review these files.");
+      }
+
+      setText("reviewStatus", readable(data.reviewStatus));
+      setText("comparisonStatus", readable(data.comparisonStatus));
+      setText("precedenceStatus", readable(data.precedenceStatus));
+      setText("agreementAssessment", readable(data.agreementAssessment));
+      setText("sowAssessment", readable(data.sowAssessment));
+      setText(
+        "candidateAssessment",
+        readable(data.textualCandidateAssessment)
+      );
+      setText("notice", data.notice || "");
+
+      showEvidence("agreement", data.agreementEvidence);
+      showEvidence("sow", data.sowEvidence);
+      showPrecedenceEvidence(data.precedenceEvidence);
+
+      reviewedFiles = { agreementFile, sowFile };
+      aiButton.disabled = false;
+      results.hidden = false;
+      results.scrollIntoView({ behavior: "smooth" });
+    } catch (error) {
+      errorBox.textContent = error.message;
+    } finally {
+      button.disabled = false;
+      button.textContent = "Review payment terms";
+    }
+  });
+
+  aiButton.addEventListener("click", async () => {
+    if (!reviewedFiles) return;
+
+    aiButton.disabled = true;
+    aiResults.replaceChildren();
+    aiComparison.hidden = true;
+aiComparison.textContent = "";
+
+    try {
+      aiStatus.textContent = "Checking Agreement with local AI…";
+            const agreementData =
+        await requestAiQuotes(reviewedFiles.agreementFile);
+      showAiGroup("Agreement suggestions", agreementData);
+
+      aiStatus.textContent = "Checking Statement of Work with local AI…";
+      const sowData = await requestAiQuotes(reviewedFiles.sowFile);
+      showAiGroup("Statement of Work suggestions", sowData);
+      showCandidateComparison(agreementData, sowData);
+
+      aiStatus.textContent =
+        "Suggestions complete. Check every quote in the original PDFs.";
+    } catch (error) {
+      aiStatus.textContent = `AI suggestions stopped: ${error.message}`;
+    } finally {
+      aiButton.disabled = false;
+    }
+  });
+  document.getElementById("printButton").addEventListener("click", () => {
+  window.print();
+});
+</script>
+</body>
+</html>

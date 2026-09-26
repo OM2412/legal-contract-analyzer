@@ -1,0 +1,4 @@
+﻿SYNTHETIC TEST SOW
+
+Client shall pay Provider the project fee within
+60 calendar days after receipt of the invoice.
