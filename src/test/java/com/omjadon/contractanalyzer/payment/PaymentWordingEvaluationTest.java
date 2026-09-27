@@ -12,6 +12,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PaymentWordingEvaluationTest {
 
@@ -104,6 +105,18 @@ class PaymentWordingEvaluationTest {
                             filename
                     );
                 })
+        );
+    }
+
+    @Test
+    void negationAndReversedPartiesProduceNoSupportedTerm()
+            throws Exception {
+        SourceDocument document = load("negative-payment-agreement.txt");
+
+        assertTrue(
+                PaymentTermExtractor.extractAll(document).isEmpty(),
+                "Negation or reversed payer/payee must not be treated "
+                        + "as a supported Client-to-Provider obligation"
         );
     }
 

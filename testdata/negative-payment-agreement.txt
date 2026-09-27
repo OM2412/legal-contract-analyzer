@@ -1,0 +1,2 @@
+Client shall not pay Provider the project fee within 30 calendar days after receipt of the invoice.
+Provider shall pay Client the project fee within 30 calendar days after receipt of the invoice.
