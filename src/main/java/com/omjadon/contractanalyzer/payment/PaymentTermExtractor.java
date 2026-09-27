@@ -37,6 +37,16 @@ public final class PaymentTermExtractor {
             Pattern.CASE_INSENSITIVE
     );
 
+    private static final Pattern DUE_AND_PAYABLE_CLAUSE = Pattern.compile(
+            "\\bThe\\s+project\\s+fee\\s+is\\s+due\\s+and"
+                    + "\\s+payable\\s+by\\s+Client\\s+to\\s+Provider"
+                    + "\\s+within\\s+(\\d+)\\s+"
+                    + "(?:(calendar|business)\\s+)?days"
+                    + "\\s+after\\s+receipt\\s+of\\s+"
+                    + "(?:the|an)\\s+invoice\\.",
+            Pattern.CASE_INSENSITIVE
+    );
+
     private PaymentTermExtractor() {
     }
 
@@ -47,6 +57,7 @@ public final class PaymentTermExtractor {
 
         addMatches(document, PAYMENT_CLAUSE, false, terms);
         addMatches(document, LINKED_INVOICE_CLAUSE, true, terms);
+        addMatches(document, DUE_AND_PAYABLE_CLAUSE, true, terms);
 
         terms.sort(Comparator.comparingInt(
                 term -> term.evidence().start()
@@ -58,7 +69,7 @@ public final class PaymentTermExtractor {
     private static void addMatches(
             SourceDocument document,
             Pattern pattern,
-            boolean linkedInvoice,
+            boolean invoiceReceiptOnly,
             List<PaymentTerm> terms
     ) {
         Matcher matcher = pattern.matcher(document.text());
@@ -88,7 +99,7 @@ public final class PaymentTermExtractor {
 
             PaymentTerm.PaymentTrigger trigger;
 
-            if (linkedInvoice) {
+            if (invoiceReceiptOnly) {
                 trigger = PaymentTerm.PaymentTrigger.INVOICE_RECEIPT;
             } else if (matcher.group("acceptance") != null) {
                 trigger = PaymentTerm.PaymentTrigger.FINAL_ACCEPTANCE;
