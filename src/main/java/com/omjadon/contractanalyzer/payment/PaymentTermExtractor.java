@@ -16,48 +16,29 @@ public final class PaymentTermExtractor {
     private static final Pattern PAYMENT_CLAUSE = Pattern.compile(
             "\\b(?:The\\s+)?Client\\s+(?:shall|must)\\s+pay"
                     + "\\s+(?:the\\s+)?Provider\\s+the\\s+project\\s+fee"
-                    + "\\s+within\\s+(\\d+)\\s+"
+                    + "\\s+(?:within|no\\s+later\\s+than)\\s+(\\d+)\\s+"
                     + "(?:(calendar|business)\\s+)?days"
                     + "\\s+(?:(?:(?:after|following)\\s+receipt\\s+of"
                     + "|after\\s+receiving)\\s+(?:the|an)\\s+invoice"
-                    + "|(?<acceptance>after\\s+final\\s+acceptance))\\.",
+                    + "|(?<acceptance>after\\s+final\\s+acceptance)"
+                    + "|(?<invoiceDate>after\\s+(?:the\\s+)?invoice\\s+date))\\.",
             Pattern.CASE_INSENSITIVE
     );
 
     private PaymentTermExtractor() {
     }
 
-    public static Optional<PaymentTerm> extract(SourceDocument document) {
-        List<PaymentTerm> terms = extractAll(document);
-
-        if (terms.size() > 1) {
-            throw new IllegalArgumentException(
-                    "Multiple matching payment clauses in "
-                            + document.documentId()
-            );
-        }
-
-        return terms.stream().findFirst();
-    }
-
-    public static List<PaymentTerm> extractAll(
-            SourceDocument document
-    ) {
+    public static List<PaymentTerm> extractAll(SourceDocument document) {
         Objects.requireNonNull(document, "document");
 
         Matcher matcher = PAYMENT_CLAUSE.matcher(document.text());
         List<PaymentTerm> terms = new ArrayList<>();
 
         while (matcher.find()) {
-            String daysText = matcher.group(1);
-            String unitText = matcher.group(2);
-            boolean finalAcceptance =
-                    matcher.group("acceptance") != null;
-
             final int days;
 
             try {
-                days = Integer.parseInt(daysText);
+                days = Integer.parseInt(matcher.group(1));
             } catch (NumberFormatException exception) {
                 throw new IllegalArgumentException(
                         "Payment period is too large to represent",
@@ -65,6 +46,7 @@ public final class PaymentTermExtractor {
                 );
             }
 
+            String unitText = matcher.group(2);
             PaymentTerm.DayUnit unit;
 
             if (unitText == null) {
@@ -75,10 +57,15 @@ public final class PaymentTermExtractor {
                 unit = PaymentTerm.DayUnit.CALENDAR_DAYS;
             }
 
-            PaymentTerm.PaymentTrigger trigger =
-                    finalAcceptance
-                            ? PaymentTerm.PaymentTrigger.FINAL_ACCEPTANCE
-                            : PaymentTerm.PaymentTrigger.INVOICE_RECEIPT;
+            PaymentTerm.PaymentTrigger trigger;
+
+            if (matcher.group("acceptance") != null) {
+                trigger = PaymentTerm.PaymentTrigger.FINAL_ACCEPTANCE;
+            } else if (matcher.group("invoiceDate") != null) {
+                trigger = PaymentTerm.PaymentTrigger.INVOICE_DATE;
+            } else {
+                trigger = PaymentTerm.PaymentTrigger.INVOICE_RECEIPT;
+            }
 
             int start = document.text().codePointCount(
                     0, matcher.start()
@@ -88,9 +75,7 @@ public final class PaymentTermExtractor {
             );
 
             EvidenceSpan evidence = EvidenceValidator.fromRange(
-                    document,
-                    start,
-                    end
+                    document, start, end
             );
 
             terms.add(new PaymentTerm(
@@ -105,5 +90,18 @@ public final class PaymentTermExtractor {
         }
 
         return List.copyOf(terms);
+    }
+
+    public static Optional<PaymentTerm> extract(SourceDocument document) {
+        List<PaymentTerm> terms = extractAll(document);
+
+        if (terms.size() > 1) {
+            throw new IllegalArgumentException(
+                    "Multiple matching payment clauses in "
+                            + document.documentId()
+            );
+        }
+
+        return terms.stream().findFirst();
     }
 }

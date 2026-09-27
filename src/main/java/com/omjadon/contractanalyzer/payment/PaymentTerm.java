@@ -25,6 +25,7 @@ public record PaymentTerm(
 
     public enum PaymentTrigger {
         INVOICE_RECEIPT,
+        INVOICE_DATE,
         FINAL_ACCEPTANCE,
         OTHER,
         UNKNOWN
