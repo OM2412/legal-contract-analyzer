@@ -19,6 +19,7 @@ public final class PaymentTermExtractor {
                     + "\\s+(?:within|no\\s+later\\s+than)\\s+(\\d+)\\s+"
                     + "(?:(calendar|business)\\s+)?days"
                     + "\\s+(?:(?:(?:after|following)\\s+receipt\\s+of"
+                    + "|of\\s+receipt\\s+of"
                     + "|after\\s+receiving)\\s+(?:the|an)\\s+invoice"
                     + "|(?<acceptance>after\\s+final\\s+acceptance)"
                     + "|(?<invoiceDate>after\\s+(?:the\\s+)?invoice\\s+date))\\.",

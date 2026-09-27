@@ -49,4 +49,23 @@ class PaymentDeadlineWordingTest {
                         .status()
         );
     }
+
+    @Test
+    void ofReceiptOfInvoiceIsRecognizedAsInvoiceReceipt() {
+        String clause = "Client shall pay Provider the project fee "
+                + "within 30 calendar days of receipt of the invoice.";
+        SourceDocument document = new SourceDocument("agreement", "1", clause);
+
+        PaymentTerm term = PaymentTermExtractor.extract(document)
+                .orElseThrow();
+
+        assertEquals(clause, term.evidence().quote());
+        assertEquals(30, term.days());
+        assertEquals(PaymentTerm.PaymentTrigger.INVOICE_RECEIPT, term.trigger());
+        assertEquals(
+                PaymentPolicyEvaluator.Status.WITHIN_POLICY,
+                PaymentPolicyEvaluator.evaluate(document, term, POLICY)
+                        .status()
+        );
+    }
 }
