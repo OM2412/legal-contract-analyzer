@@ -5,6 +5,7 @@ import com.omjadon.contractanalyzer.model.EvidenceSpan;
 import com.omjadon.contractanalyzer.model.SourceDocument;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -26,14 +27,41 @@ public final class PaymentTermExtractor {
             Pattern.CASE_INSENSITIVE
     );
 
+    private static final Pattern LINKED_INVOICE_CLAUSE = Pattern.compile(
+            "\\bProvider\\s+will\\s+issue\\s+an\\s+invoice"
+                    + "\\s+for\\s+the\\s+project\\s+fee\\."
+                    + "\\s+Client\\s+must\\s+pay\\s+that\\s+invoice"
+                    + "\\s+within\\s+(\\d+)\\s+"
+                    + "(?:(calendar|business)\\s+)?days"
+                    + "\\s+of\\s+receiving\\s+it\\.",
+            Pattern.CASE_INSENSITIVE
+    );
+
     private PaymentTermExtractor() {
     }
 
     public static List<PaymentTerm> extractAll(SourceDocument document) {
         Objects.requireNonNull(document, "document");
 
-        Matcher matcher = PAYMENT_CLAUSE.matcher(document.text());
         List<PaymentTerm> terms = new ArrayList<>();
+
+        addMatches(document, PAYMENT_CLAUSE, false, terms);
+        addMatches(document, LINKED_INVOICE_CLAUSE, true, terms);
+
+        terms.sort(Comparator.comparingInt(
+                term -> term.evidence().start()
+        ));
+
+        return List.copyOf(terms);
+    }
+
+    private static void addMatches(
+            SourceDocument document,
+            Pattern pattern,
+            boolean linkedInvoice,
+            List<PaymentTerm> terms
+    ) {
+        Matcher matcher = pattern.matcher(document.text());
 
         while (matcher.find()) {
             final int days;
@@ -60,7 +88,9 @@ public final class PaymentTermExtractor {
 
             PaymentTerm.PaymentTrigger trigger;
 
-            if (matcher.group("acceptance") != null) {
+            if (linkedInvoice) {
+                trigger = PaymentTerm.PaymentTrigger.INVOICE_RECEIPT;
+            } else if (matcher.group("acceptance") != null) {
                 trigger = PaymentTerm.PaymentTrigger.FINAL_ACCEPTANCE;
             } else if (matcher.group("invoiceDate") != null) {
                 trigger = PaymentTerm.PaymentTrigger.INVOICE_DATE;
@@ -89,8 +119,6 @@ public final class PaymentTermExtractor {
                     evidence
             ));
         }
-
-        return List.copyOf(terms);
     }
 
     public static Optional<PaymentTerm> extract(SourceDocument document) {
