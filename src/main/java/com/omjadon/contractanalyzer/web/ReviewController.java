@@ -96,6 +96,18 @@ response.put("sowVersion", sow.version());
                         .map(assessment -> assessment.status().name())
                         .orElse(null)
         );
+        response.put(
+        "agreementExplanation",
+        result.agreementAssessment()
+                .map(assessment -> assessment.explanation())
+                .orElse(null)
+);
+response.put(
+        "sowExplanation",
+        result.sowAssessment()
+                .map(assessment -> assessment.explanation())
+                .orElse(null)
+);
         response.put("precedenceStatus", result.precedence().status().name());
         response.put(
                 "precedenceEvidence",
@@ -129,6 +141,12 @@ response.put("sowVersion", sow.version());
                         .orElse(null)
         );
         response.put(
+        "textualCandidateExplanation",
+        result.textualCandidateAssessment()
+                .map(assessment -> assessment.explanation())
+                .orElse(null)
+);
+        response.put(
                 "agreementEvidence",
                 result.agreementTerm()
                         .map(term -> evidence(
@@ -148,6 +166,26 @@ response.put("sowVersion", sow.version());
                         ))
                         .orElse(null)
         );
+        response.put(
+        "agreementMatches",
+        result.agreementMatches().stream()
+                .map(term -> evidence(
+                        agreement,
+                        term.evidence(),
+                        isPdf(agreementFile.getOriginalFilename())
+                ))
+                .toList()
+);
+response.put(
+        "sowMatches",
+        result.sowMatches().stream()
+                .map(term -> evidence(
+                        sow,
+                        term.evidence(),
+                        isPdf(sowFile.getOriginalFilename())
+                ))
+                .toList()
+);
         response.put("policyMaxDays", maxDays);
         response.put(
                 "notice",

@@ -2,6 +2,7 @@ package com.omjadon.contractanalyzer.payment;
 
 import com.omjadon.contractanalyzer.model.SourceDocument;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -27,8 +28,14 @@ public final class PaymentReviewService {
             PaymentPrecedenceDetector.Detection precedence,
             Optional<PaymentPolicyEvaluator.Assessment> agreementAssessment,
             Optional<PaymentPolicyEvaluator.Assessment> sowAssessment,
-            Optional<PaymentPolicyEvaluator.Assessment> textualCandidateAssessment
+            Optional<PaymentPolicyEvaluator.Assessment> textualCandidateAssessment,
+            List<PaymentTerm> agreementMatches,
+            List<PaymentTerm> sowMatches
     ) {
+        public Review {
+            agreementMatches = List.copyOf(agreementMatches);
+            sowMatches = List.copyOf(sowMatches);
+        }
     }
 
     public static Review analyze(
@@ -40,11 +47,15 @@ public final class PaymentReviewService {
         Objects.requireNonNull(sow, "sow");
         Objects.requireNonNull(policy, "policy");
 
-        Optional<PaymentTerm> agreementTerm =
-                PaymentTermExtractor.extract(agreement);
+        List<PaymentTerm> agreementMatches =
+                PaymentTermExtractor.extractAll(agreement);
+        List<PaymentTerm> sowMatches =
+                PaymentTermExtractor.extractAll(sow);
 
+        Optional<PaymentTerm> agreementTerm =
+                uniqueTerm(agreementMatches);
         Optional<PaymentTerm> sowTerm =
-                PaymentTermExtractor.extract(sow);
+                uniqueTerm(sowMatches);
 
         PaymentPrecedenceDetector.Detection precedence =
                 PaymentPrecedenceDetector.detect(agreement, sow);
@@ -63,6 +74,21 @@ public final class PaymentReviewService {
                         )
                 );
 
+        if (agreementMatches.size() > 1 || sowMatches.size() > 1) {
+            return new Review(
+                    ReviewStatus.REVIEW_REQUIRED,
+                    agreementTerm,
+                    sowTerm,
+                    Optional.empty(),
+                    precedence,
+                    agreementAssessment,
+                    sowAssessment,
+                    Optional.empty(),
+                    agreementMatches,
+                    sowMatches
+            );
+        }
+
         if (agreementTerm.isEmpty() || sowTerm.isEmpty()) {
             return new Review(
                     ReviewStatus.INCOMPLETE,
@@ -72,7 +98,9 @@ public final class PaymentReviewService {
                     precedence,
                     agreementAssessment,
                     sowAssessment,
-                    Optional.empty()
+                    Optional.empty(),
+                    agreementMatches,
+                    sowMatches
             );
         }
 
@@ -98,8 +126,7 @@ public final class PaymentReviewService {
                 == PaymentTermComparator.Status.UNABLE_TO_COMPARE) {
             status = ReviewStatus.REVIEW_REQUIRED;
         } else {
-            // A difference exists. Precedence may identify a textual
-            // candidate; it does not determine legal enforceability.
+            // Precedence identifies a textual candidate only.
             switch (precedence.status()) {
                 case SOW_TEXT_PRIORITY -> {
                     status = ReviewStatus.SOW_TEXT_CANDIDATE;
@@ -125,7 +152,17 @@ public final class PaymentReviewService {
                 precedence,
                 agreementAssessment,
                 sowAssessment,
-                candidate
+                candidate,
+                agreementMatches,
+                sowMatches
         );
+    }
+
+    private static Optional<PaymentTerm> uniqueTerm(
+            List<PaymentTerm> matches
+    ) {
+        return matches.size() == 1
+                ? Optional.of(matches.get(0))
+                : Optional.empty();
     }
 }

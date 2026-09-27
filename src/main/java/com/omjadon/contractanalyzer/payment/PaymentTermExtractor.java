@@ -4,6 +4,8 @@ import com.omjadon.contractanalyzer.evidence.EvidenceValidator;
 import com.omjadon.contractanalyzer.model.EvidenceSpan;
 import com.omjadon.contractanalyzer.model.SourceDocument;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -12,11 +14,13 @@ import java.util.regex.Pattern;
 public final class PaymentTermExtractor {
 
     private static final Pattern PAYMENT_CLAUSE = Pattern.compile(
-            "\\bClient\\s+shall\\s+pay\\s+Provider\\s+the\\s+project\\s+fee"
+            "\\b(?:The\\s+)?Client\\s+(?:shall|must)\\s+pay"
+                    + "\\s+(?:the\\s+)?Provider\\s+the\\s+project\\s+fee"
                     + "\\s+within\\s+(\\d+)\\s+"
                     + "(?:(calendar|business)\\s+)?days"
-                    + "\\s+(?:after|following)\\s+receipt\\s+of"
-                    + "\\s+(?:the|an)\\s+invoice\\.",
+                    + "\\s+(?:(?:(?:after|following)\\s+receipt\\s+of"
+                    + "|after\\s+receiving)\\s+(?:the|an)\\s+invoice"
+                    + "|(?<acceptance>after\\s+final\\s+acceptance))\\.",
             Pattern.CASE_INSENSITIVE
     );
 
@@ -24,65 +28,82 @@ public final class PaymentTermExtractor {
     }
 
     public static Optional<PaymentTerm> extract(SourceDocument document) {
-        Objects.requireNonNull(document, "document");
+        List<PaymentTerm> terms = extractAll(document);
 
-        Matcher matcher = PAYMENT_CLAUSE.matcher(document.text());
-
-        if (!matcher.find()) {
-            return Optional.empty();
-        }
-
-        // Record the first match before checking for another clause.
-        int startIndex = matcher.start();
-        int endIndex = matcher.end();
-        String daysText = matcher.group(1);
-        String unitText = matcher.group(2);
-
-        if (matcher.find()) {
+        if (terms.size() > 1) {
             throw new IllegalArgumentException(
                     "Multiple matching payment clauses in "
                             + document.documentId()
             );
         }
 
-        final int days;
+        return terms.stream().findFirst();
+    }
 
-        try {
-            days = Integer.parseInt(daysText);
-        } catch (NumberFormatException exception) {
-            throw new IllegalArgumentException(
-                    "Payment period is too large to represent",
-                    exception
+    public static List<PaymentTerm> extractAll(
+            SourceDocument document
+    ) {
+        Objects.requireNonNull(document, "document");
+
+        Matcher matcher = PAYMENT_CLAUSE.matcher(document.text());
+        List<PaymentTerm> terms = new ArrayList<>();
+
+        while (matcher.find()) {
+            String daysText = matcher.group(1);
+            String unitText = matcher.group(2);
+            boolean finalAcceptance =
+                    matcher.group("acceptance") != null;
+
+            final int days;
+
+            try {
+                days = Integer.parseInt(daysText);
+            } catch (NumberFormatException exception) {
+                throw new IllegalArgumentException(
+                        "Payment period is too large to represent",
+                        exception
+                );
+            }
+
+            PaymentTerm.DayUnit unit;
+
+            if (unitText == null) {
+                unit = PaymentTerm.DayUnit.UNKNOWN;
+            } else if (unitText.equalsIgnoreCase("business")) {
+                unit = PaymentTerm.DayUnit.BUSINESS_DAYS;
+            } else {
+                unit = PaymentTerm.DayUnit.CALENDAR_DAYS;
+            }
+
+            PaymentTerm.PaymentTrigger trigger =
+                    finalAcceptance
+                            ? PaymentTerm.PaymentTrigger.FINAL_ACCEPTANCE
+                            : PaymentTerm.PaymentTrigger.INVOICE_RECEIPT;
+
+            int start = document.text().codePointCount(
+                    0, matcher.start()
             );
+            int end = document.text().codePointCount(
+                    0, matcher.end()
+            );
+
+            EvidenceSpan evidence = EvidenceValidator.fromRange(
+                    document,
+                    start,
+                    end
+            );
+
+            terms.add(new PaymentTerm(
+                    days,
+                    unit,
+                    trigger,
+                    "project_fee",
+                    "Client",
+                    "Provider",
+                    evidence
+            ));
         }
 
-        PaymentTerm.DayUnit unit;
-
-        if (unitText == null) {
-            unit = PaymentTerm.DayUnit.UNKNOWN;
-        } else if (unitText.equalsIgnoreCase("business")) {
-            unit = PaymentTerm.DayUnit.BUSINESS_DAYS;
-        } else {
-            unit = PaymentTerm.DayUnit.CALENDAR_DAYS;
-        }
-
-        int start = document.text().codePointCount(0, startIndex);
-        int end = document.text().codePointCount(0, endIndex);
-
-        EvidenceSpan evidence = EvidenceValidator.fromRange(
-                document,
-                start,
-                end
-        );
-
-        return Optional.of(new PaymentTerm(
-                days,
-                unit,
-                PaymentTerm.PaymentTrigger.INVOICE_RECEIPT,
-                "project_fee",
-                "Client",
-                "Provider",
-                evidence
-        ));
+        return List.copyOf(terms);
     }
 }

@@ -265,6 +265,7 @@
         <article class="panel">
           <h3>Agreement</h3>
           <div>Policy assessment: <strong id="agreementAssessment"></strong></div>
+          <div id="agreementExplanation" class="muted" style="margin-top: 10px"></div>
           <blockquote id="agreementQuote"></blockquote>
           <div id="agreementLocation" class="location"></div>
         </article>
@@ -272,6 +273,7 @@
         <article class="panel">
           <h3>Statement of Work</h3>
           <div>Policy assessment: <strong id="sowAssessment"></strong></div>
+          <div id="sowExplanation" class="muted" style="margin-top: 10px"></div>
           <blockquote id="sowQuote"></blockquote>
           <div id="sowLocation" class="location"></div>
         </article>
@@ -297,6 +299,7 @@
         Textual candidate assessment:
         <strong id="candidateAssessment"></strong>.
         <span id="notice"></span>
+        <div id="textualCandidateExplanation" style="margin-top: 8px"></div>
       </div>
     </section>
   </main>
@@ -309,8 +312,8 @@
   const aiButton = document.getElementById("aiButton");
   const aiStatus = document.getElementById("aiStatus");
   const aiResults = document.getElementById("aiResults");
-  const documentIdentity = document.getElementById("documentIdentity");
   const aiComparison = document.getElementById("aiComparison");
+  const documentIdentity = document.getElementById("documentIdentity");
 
   let reviewedFiles = null;
 
@@ -322,23 +325,75 @@
     document.getElementById(id).textContent = value;
   }
 
-  function showEvidence(prefix, evidence) {
-    setText(
-      prefix + "Quote",
-      evidence?.quote ?? "No supported payment clause recognized."
-    );
+  function showExplanation(id, anchorId, value) {
+    let element = document.getElementById(id);
 
-    const location = evidence
-      ? (evidence.firstPage
-          ? `Page ${evidence.firstPage}` +
-            (evidence.lastPage !== evidence.firstPage
-              ? `–${evidence.lastPage}` : "")
-          : "TXT document") +
-        ` · Text offsets ${evidence.start}–${evidence.end}`
-      : "";
+    if (!element) {
+      element = document.createElement("div");
+      element.id = id;
+      element.className = "muted";
+      element.style.marginTop = "10px";
 
-    setText(prefix + "Location", location);
+      if (id === "textualCandidateExplanation") {
+        document.getElementById("notice")
+          .insertAdjacentElement("afterend", element);
+      } else {
+        document.getElementById(anchorId).parentElement
+          .insertAdjacentElement("afterend", element);
+      }
+    }
+
+    element.textContent = value ?? "";
   }
+
+  function showEvidence(prefix, evidence, matches) {
+  const quoteElement = document.getElementById(prefix + "Quote");
+  const locationElement = document.getElementById(prefix + "Location");
+
+  const previousList = document.getElementById(prefix + "MatchList");
+  if (previousList) previousList.remove();
+
+  function locationOf(item) {
+    const source = item.firstPage
+      ? `Page ${item.firstPage}` +
+        (item.lastPage !== item.firstPage
+          ? `–${item.lastPage}` : "")
+      : "TXT document";
+
+    return `${source} · Text offsets ${item.start}–${item.end}`;
+  }
+
+  if (matches && matches.length > 1) {
+    quoteElement.hidden = true;
+    locationElement.textContent =
+      `${matches.length} payment clauses found. ` +
+      "No single clause was selected; manual review required.";
+
+    const list = document.createElement("div");
+    list.id = prefix + "MatchList";
+
+    for (const item of matches) {
+      const quote = document.createElement("blockquote");
+      quote.textContent = item.quote;
+
+      const location = document.createElement("div");
+      location.className = "location";
+      location.textContent = locationOf(item);
+
+      list.append(quote, location);
+    }
+
+    locationElement.insertAdjacentElement("afterend", list);
+    return;
+  }
+
+  quoteElement.hidden = false;
+  quoteElement.textContent =
+    evidence?.quote ?? "No supported payment clause recognized.";
+  locationElement.textContent = evidence
+    ? locationOf(evidence)
+    : "";
+}
 
   function showPrecedenceEvidence(items) {
     const container = document.getElementById("precedenceEvidence");
@@ -369,8 +424,7 @@
     }
   }
 
-  
-    function showAiGroup(label, data) {
+  function showAiGroup(label, data) {
     const heading = document.createElement("h4");
     heading.textContent = label;
     aiResults.append(heading);
@@ -419,56 +473,74 @@
 
       const source = document.createElement("div");
       source.className = "location";
-      source.textContent =
-        `Source: ${candidate.evidence.quote}`;
+      source.textContent = `Source: ${candidate.evidence.quote}`;
 
       card.append(title, trigger, source);
       aiResults.append(card);
     }
   }
-function showCandidateComparison(agreementData, sowData) {
-  aiComparison.hidden = true;
-  aiComparison.textContent = "";
 
-  const agreement = agreementData.candidates ?? [];
-  const sow = sowData.candidates ?? [];
+  function showCandidateComparison(agreementData, sowData) {
+    aiComparison.hidden = true;
+    aiComparison.textContent = "";
 
-  if (agreement.length !== 1 || sow.length !== 1) {
-    return;
-  }
+    const agreement = agreementData.candidates ?? [];
+    const sow = sowData.candidates ?? [];
 
-  const a = agreement[0];
-  const s = sow[0];
+    if (agreement.length !== 1 || sow.length !== 1) {
+      return;
+    }
 
-  if (a.dayUnit !== s.dayUnit) {
-    aiComparison.textContent =
-      "AI candidates use different day units. " +
-      "Their durations have not been compared.";
-  } else {
-    const unit = readable(a.dayUnit).toLowerCase();
-    const difference = Math.abs(s.days - a.days);
+    const a = agreement[0];
+    const s = sow[0];
 
-    const comparison = s.days > a.days
-      ? `SOW candidate is ${difference} ${unit} longer.`
-      : s.days < a.days
-        ? `Agreement candidate is ${difference} ${unit} longer.`
-        : "Both candidates state the same duration.";
+    if (a.dayUnit !== s.dayUnit) {
+      aiComparison.textContent =
+        "AI candidates use different day units. " +
+        "Their durations have not been compared.";
+    } else {
+      const unit = readable(a.dayUnit).toLowerCase();
+      const difference = Math.abs(s.days - a.days);
 
-    aiComparison.textContent =
-      `Preliminary AI candidate comparison: ` +
-      `Agreement ${a.days} ${unit}; SOW ${s.days} ${unit}. ` +
-      comparison;
-  }
+      const comparison = s.days > a.days
+        ? `SOW candidate is ${difference} ${unit} longer.`
+        : s.days < a.days
+          ? `Agreement candidate is ${difference} ${unit} longer.`
+          : "Both candidates state the same duration.";
 
-  if (!a.invoiceReceiptConfirmed || !s.invoiceReceiptConfirmed) {
+      aiComparison.textContent =
+        "Preliminary AI candidate comparison: " +
+        `Agreement ${a.days} ${unit}; SOW ${s.days} ${unit}. ` +
+        comparison;
+    }
+
+    if (!a.invoiceReceiptConfirmed || !s.invoiceReceiptConfirmed) {
+      aiComparison.textContent +=
+        " At least one invoice trigger is not independently verified.";
+    }
+
     aiComparison.textContent +=
-      " At least one invoice trigger is not independently verified.";
+      " This comparison does not determine policy compliance or legal priority.";
+    aiComparison.hidden = false;
   }
 
-  aiComparison.textContent +=
-    " This comparison does not determine policy compliance or legal priority.";
-  aiComparison.hidden = false;
-}
+  function showDocumentIdentity(agreementFile, sowFile, data) {
+    documentIdentity.replaceChildren();
+
+    const documents = [
+      ["Agreement", agreementFile, data.agreementVersion],
+      ["SOW", sowFile, data.sowVersion]
+    ];
+
+    for (const [label, file, version] of documents) {
+      const line = document.createElement("div");
+      line.textContent =
+        `${label}: ${file.name} · Extracted text: ` +
+        (version ?? "Version unavailable");
+      documentIdentity.append(line);
+    }
+  }
+
   async function requestAiQuotes(file) {
     const upload = new FormData();
     upload.append("document", file);
@@ -486,22 +558,6 @@ function showCandidateComparison(agreementData, sowData) {
 
     return data;
   }
-  function showDocumentIdentity(agreementFile, sowFile, data) {
-  documentIdentity.replaceChildren();
-
-  const documents = [
-    ["Agreement", agreementFile, data.agreementVersion],
-    ["SOW", sowFile, data.sowVersion]
-  ];
-
-  for (const [label, file, version] of documents) {
-    const line = document.createElement("div");
-    line.textContent =
-      `${label}: ${file.name} · Extracted text: ` +
-      (version ?? "Version unavailable");
-    documentIdentity.append(line);
-  }
-}
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -510,7 +566,7 @@ function showCandidateComparison(agreementData, sowData) {
     reviewedFiles = null;
     aiResults.replaceChildren();
     aiComparison.hidden = true;
-aiComparison.textContent = "";
+    aiComparison.textContent = "";
     aiStatus.textContent = "";
     aiButton.disabled = true;
     button.disabled = true;
@@ -542,8 +598,32 @@ aiComparison.textContent = "";
       );
       setText("notice", data.notice || "");
 
-      showEvidence("agreement", data.agreementEvidence);
-      showEvidence("sow", data.sowEvidence);
+      showExplanation(
+        "agreementExplanation",
+        "agreementAssessment",
+        data.agreementExplanation
+      );
+      showExplanation(
+        "sowExplanation",
+        "sowAssessment",
+        data.sowExplanation
+      );
+      showExplanation(
+        "textualCandidateExplanation",
+        "candidateAssessment",
+        data.textualCandidateExplanation
+      );
+
+      showEvidence(
+  "agreement",
+  data.agreementEvidence,
+  data.agreementMatches
+);
+showEvidence(
+  "sow",
+  data.sowEvidence,
+  data.sowMatches
+);
       showPrecedenceEvidence(data.precedenceEvidence);
       showDocumentIdentity(agreementFile, sowFile, data);
 
@@ -565,11 +645,11 @@ aiComparison.textContent = "";
     aiButton.disabled = true;
     aiResults.replaceChildren();
     aiComparison.hidden = true;
-aiComparison.textContent = "";
+    aiComparison.textContent = "";
 
     try {
       aiStatus.textContent = "Checking Agreement with local AI…";
-            const agreementData =
+      const agreementData =
         await requestAiQuotes(reviewedFiles.agreementFile);
       showAiGroup("Agreement suggestions", agreementData);
 
@@ -581,14 +661,15 @@ aiComparison.textContent = "";
       aiStatus.textContent =
         "Suggestions complete. Check every quote in the original PDFs.";
     } catch (error) {
-      aiStatus.textContent = `AI suggestions stopped: ${error.message}`;
+      aiStatus.textContent =
+        `AI suggestions stopped: ${error.message}`;
     } finally {
       aiButton.disabled = false;
     }
   });
-  document.getElementById("printButton").addEventListener("click", () => {
-  window.print();
-});
+
+  document.getElementById("printButton")
+    .addEventListener("click", () => window.print());
 </script>
 </body>
 </html>
