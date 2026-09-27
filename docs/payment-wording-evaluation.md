@@ -30,7 +30,11 @@ This is a small, synthetic evaluation set for the rule-based extractor. It is no
 | --- | --- |
 | `testdata/conflicting-payment-agreement.txt` | Show every matched clause; no single Agreement assessment |
 | `testdata/mixed-payment-agreement.txt` | Show both wording types; review required; no single Agreement assessment |
+## Expected negative control
 
+| Agreement file | Expected behavior |
+| --- | --- |
+| `testdata/negative-payment-agreement.txt` | No supported Client-to-Provider payment term: one sentence negates payment and the other reverses payer and payee |
 ## Guardrails to retain
 
 - A standalone `Client must pay that invoice ...` sentence must not establish the project-fee scope.
