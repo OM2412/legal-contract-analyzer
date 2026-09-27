@@ -57,4 +57,33 @@ class PaymentInvoiceDateTest {
                         .status()
         );
     }
+
+    @Test
+    void equalDurationsWithDifferentTriggersAreNotConsistent() {
+        SourceDocument agreement = new SourceDocument(
+                "agreement",
+                "1",
+                "Client shall pay Provider the project fee within "
+                        + "30 calendar days after the invoice date."
+        );
+        SourceDocument sow = new SourceDocument(
+                "sow",
+                "1",
+                "Client shall pay Provider the project fee within "
+                        + "30 calendar days after receipt of the invoice."
+        );
+
+        PaymentTermComparator.Comparison comparison =
+                PaymentTermComparator.compare(
+                        agreement,
+                        PaymentTermExtractor.extract(agreement).orElseThrow(),
+                        sow,
+                        PaymentTermExtractor.extract(sow).orElseThrow()
+                );
+
+        assertEquals(
+                PaymentTermComparator.Status.POTENTIAL_DIFFERENCE,
+                comparison.status()
+        );
+    }
 }

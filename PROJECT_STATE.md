@@ -33,7 +33,7 @@ These are examples of narrow supported patterns, not a claim that equivalent con
 
 The `testdata/` folder contains Agreement and SOW samples, including invoice-date, final-acceptance, business-day, unspecified-day, multiple-clause, and "no later than" examples.
 
-`alternate-agreement.txt` uses different wording that the rule-based extractor does not currently recognize. Local AI can suggest its exact quote, but that suggestion does not complete the rule-based review.
+`alternate-agreement.txt` links two sentences: Provider issues the project-fee invoice, and Client must pay that invoice within 45 calendar days of receiving it. The rule-based extractor now recognizes this specific wording and cites both sentences as evidence. Local AI suggestions remain separate from the rule-based verdict.
 
 ## Run
 
