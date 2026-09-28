@@ -13,6 +13,8 @@ import java.nio.file.Path;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.junit.jupiter.api.Assumptions;
@@ -28,13 +30,7 @@ class ScannedPdfOcrTest {
 
     @Test
     void extractsImageOnlyTextAndLocatesSecondPage() throws Exception {
-        Assumptions.assumeTrue(
-                Files.isRegularFile(Path.of(
-                        "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
-                )),
-                "Local OCR integration test requires Tesseract"
-        );
-
+        requireTesseract();
         Path file = tempDir.resolve("scanned-agreement.pdf");
 
         try (PDDocument pdf = new PDDocument()) {
@@ -47,9 +43,59 @@ class ScannedPdfOcrTest {
             pdf.save(file.toFile());
         }
 
+        assertPaymentQuoteOnPageTwo(file);
+    }
+
+    @Test
+    void extractsTextAndScannedPagesFromTheSamePdf() throws Exception {
+        requireTesseract();
+        Path file = tempDir.resolve("mixed-agreement.pdf");
+
+        try (PDDocument pdf = new PDDocument()) {
+            PDPage textPage = new PDPage();
+            pdf.addPage(textPage);
+
+            try (PDPageContentStream stream =
+                         new PDPageContentStream(pdf, textPage)) {
+                stream.beginText();
+                stream.setFont(
+                        new PDType1Font(
+                                Standard14Fonts.FontName.HELVETICA
+                        ),
+                        16
+                );
+                stream.newLineAtOffset(40, 700);
+                stream.showText("MASTER SERVICE AGREEMENT");
+                stream.endText();
+            }
+
+            addImagePage(
+                    pdf,
+                    "Client shall pay Provider the project fee",
+                    "within 30 calendar days after receipt of the invoice."
+            );
+            pdf.save(file.toFile());
+        }
+
+        SourceDocument document =
+                new PdfDocumentLoader().load(file, "mixed", "1");
+
+        assertTrue(document.text().contains(
+                "MASTER SERVICE AGREEMENT"
+        ));
+        assertPaymentQuoteOnPageTwo(document);
+    }
+
+    private static void assertPaymentQuoteOnPageTwo(Path file)
+            throws Exception {
         SourceDocument document =
                 new PdfDocumentLoader().load(file, "scanned", "1");
+        assertPaymentQuoteOnPageTwo(document);
+    }
 
+    private static void assertPaymentQuoteOnPageTwo(
+            SourceDocument document
+    ) {
         String quote = "30 calendar days";
         int utf16Start = document.text().indexOf(quote);
 
@@ -70,6 +116,15 @@ class ScannedPdfOcrTest {
         assertEquals(quote, evidence.quote());
         assertEquals(2, pages.firstPage());
         assertEquals(2, pages.lastPage());
+    }
+
+    private static void requireTesseract() {
+        Assumptions.assumeTrue(
+                Files.isRegularFile(Path.of(
+                        "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
+                )),
+                "Local OCR integration test requires Tesseract"
+        );
     }
 
     private static void addImagePage(

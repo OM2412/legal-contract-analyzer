@@ -16,7 +16,7 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 
 public final class ScannedPdfOcr {
     private static final int DPI = 150;
-    private static final int MAX_OCR_PAGES = 20;
+    static final int MAX_OCR_PAGES = 20;
     private static final int MAX_IMAGE_EDGE = 3_000;
     private static final int MAX_PAGE_OUTPUT_BYTES = 400_000;
     private static final int MAX_TOTAL_CHARS = 1_000_000;
@@ -33,29 +33,17 @@ public final class ScannedPdfOcr {
             );
         }
 
-        PDFRenderer renderer = new PDFRenderer(pdf);
         StringBuilder result = new StringBuilder();
 
         for (int pageIndex = 0; pageIndex < pages; pageIndex++) {
-            validatePageSize(pdf.getPage(pageIndex).getCropBox());
+            String pageText = extractPage(pdf, pageIndex);
 
-            BufferedImage image = renderer.renderImageWithDPI(
-                    pageIndex, DPI, ImageType.RGB
-            );
-
-            try {
-                String pageText = recognize(image).strip()
-                        .replace('\f', ' ');
-
-                if (result.length() + pageText.length() + 1
-                        > MAX_TOTAL_CHARS) {
-                    throw new IOException("OCR text exceeds 1 MB limit");
-                }
-
-                result.append(pageText).append('\f');
-            } finally {
-                image.flush();
+            if (result.length() + pageText.length() + 1
+                    > MAX_TOTAL_CHARS) {
+                throw new IOException("OCR text exceeds 1 MB limit");
             }
+
+            result.append(pageText).append('\f');
         }
 
         if (result.toString().replace("\f", "").isBlank()) {
@@ -65,6 +53,30 @@ public final class ScannedPdfOcr {
         }
 
         return result.toString();
+    }
+
+    public String extractPage(PDDocument pdf, int pageIndex)
+            throws IOException {
+        Objects.requireNonNull(pdf, "pdf");
+
+        if (pageIndex < 0 || pageIndex >= pdf.getNumberOfPages()) {
+            throw new IllegalArgumentException(
+                    "Invalid PDF page index for OCR"
+            );
+        }
+
+        validatePageSize(pdf.getPage(pageIndex).getCropBox());
+
+        PDFRenderer renderer = new PDFRenderer(pdf);
+        BufferedImage image = renderer.renderImageWithDPI(
+                pageIndex, DPI, ImageType.RGB
+        );
+
+        try {
+            return recognize(image).strip().replace('\f', ' ');
+        } finally {
+            image.flush();
+        }
     }
 
     private static void validatePageSize(PDRectangle cropBox)
@@ -92,7 +104,9 @@ public final class ScannedPdfOcr {
 
         try {
             if (!ImageIO.write(image, "png", input.toFile())) {
-                throw new IOException("Unable to render PDF page for OCR");
+                throw new IOException(
+                        "Unable to render PDF page for OCR"
+                );
             }
 
             Process process = new ProcessBuilder(

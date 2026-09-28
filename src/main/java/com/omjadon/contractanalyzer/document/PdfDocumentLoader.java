@@ -37,8 +37,9 @@ public final class PdfDocumentLoader {
         }
 
         try (PDDocument pdf = Loader.loadPDF(path.toFile())) {
-            if (pdf.getNumberOfPages() == 0
-                    || pdf.getNumberOfPages() > MAX_PAGES) {
+            int pageCount = pdf.getNumberOfPages();
+
+            if (pageCount == 0 || pageCount > MAX_PAGES) {
                 throw new IOException(
                         "PDF must contain between 1 and 100 pages: "
                                 + path
@@ -54,15 +55,51 @@ public final class PdfDocumentLoader {
             stripper.setSortByPosition(true);
             stripper.setPageEnd("\f");
 
-            String text = stripper.getText(pdf);
+            String extracted = stripper.getText(pdf);
+            if (extracted.replace("\f", "").isBlank()) {
+    String scannedText = new ScannedPdfOcr().extract(pdf);
+    return new SourceDocument(documentId, version, scannedText);
+}
+            String[] pageTexts = extracted.split("\f", -1);
 
-            if (text.replace("\f", "").isBlank()) {
-                text = new ScannedPdfOcr().extract(pdf);
+            if (pageTexts.length != pageCount + 1
+                    || !pageTexts[pageCount].isEmpty()) {
+                throw new IOException(
+                        "PDF page boundaries could not be mapped safely"
+                );
             }
 
-            if (text.length() > MAX_TEXT_CHARS) {
+            ScannedPdfOcr ocr = new ScannedPdfOcr();
+            int ocrPages = 0;
+            StringBuilder combined = new StringBuilder();
+
+            for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+                String pageText = pageTexts[pageIndex];
+
+                if (pageText.isBlank()) {
+                    ocrPages++;
+                    if (ocrPages > ScannedPdfOcr.MAX_OCR_PAGES) {
+                        throw new IOException(
+                                "PDF has more than 20 pages requiring OCR"
+                        );
+                    }
+                    pageText = ocr.extractPage(pdf, pageIndex);
+                }
+
+                if (combined.length() + pageText.length() + 1
+                        > MAX_TEXT_CHARS) {
+                    throw new IOException(
+                            "Extracted PDF text exceeds limit: " + path
+                    );
+                }
+
+                combined.append(pageText).append('\f');
+            }
+
+            String text = combined.toString();
+            if (text.replace("\f", "").isBlank()) {
                 throw new IOException(
-                        "Extracted PDF text exceeds limit: " + path
+                        "OCR found no readable text in scanned PDF"
                 );
             }
 
