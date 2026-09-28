@@ -232,6 +232,14 @@ public final class ContractAnalyzerApplication {
                 label + " candidate assessment: "
                         + assessment.orElseThrow().status()
         );
+                System.out.println(
+                label + " term: days=" + candidate.days()
+                        + ", unit=" + candidate.dayUnit()
+                        + ", trigger=" + candidate.trigger()
+                        + ", payer=" + candidate.payer()
+                        + ", payee=" + candidate.payee()
+                        + ", scope=" + candidate.scope()
+        );
 
         printEvidence(label, document, pdf, candidate.evidence());
     }
