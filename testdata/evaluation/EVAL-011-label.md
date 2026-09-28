@@ -29,3 +29,10 @@ The sentence contains two payment obligations. Neither states a number of days, 
 - False positives: zero. Field errors: not applicable because no Agreement term was extracted.
 - The two milestone payments were not flagged for manual review. This is a coverage and review-status gap.
 - The SOW assessment shown by the CLI belongs to the comparison fixture, not this Agreement's evaluation label.
+## After the coverage-scanner change
+
+- CLI review status: `REVIEW_REQUIRED`.
+- Agreement obligations extracted: zero; the two annotated obligations remain extraction misses.
+- The scanner flags the complete payment sentence as unrecognized wording for manual review.
+- No Agreement policy assessment or single textual candidate is assigned.
+- This change improves the review warning; it does not establish extraction coverage for milestone payments.
