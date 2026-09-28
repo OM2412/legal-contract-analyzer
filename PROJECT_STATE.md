@@ -74,6 +74,6 @@ mvn org.codehaus.mojo:exec-maven-plugin:3.6.4:java '-Dexec.mainClass=com.omjadon
 - Latest confirmed GitHub commit: `a1725b1` (`Package executable Spring Boot JAR`); `main` and `origin/main` are aligned and the working tree was clean.
 - `mvn package` completed successfully after configuring the Spring Boot Maven plugin with classifier `exec`.
 - Executable output: `target/legal-contract-analyzer-0.1.0-SNAPSHOT-exec.jar`.
-- Run locally with `java -jar "target/legal-contract-analyzer-0.1.0-SNAPSHOT-exec.jar"` and open `http://127.0.0.1:8080/`. Browser startup still needs explicit confirmation.
+- Run locally with `java -jar "target/legal-contract-analyzer-0.1.0-SNAPSHOT-exec.jar"` and open `http://127.0.0.1:8080/`. - Executable JAR verified on port 8081: the PDF review API returned Agreement and SOW evidence with page numbers, a 30-versus-60-day comparison, and `SOW_TEXT_CANDIDATE`.
 - An earlier package attempt failed while renaming a JAR inside OneDrive's `target` folder; the classifier resolved that build failure.
 - Next: verify the JAR-served page and one PDF review, then continue EVAL-017–020. Deployment, OCR, database, React UI and the 3D landing page remain future work.
