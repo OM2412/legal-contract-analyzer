@@ -20,8 +20,7 @@ The full sentence is the source evidence. The words "after receiving a valid inv
 
 ## Baseline observation
 
-Pending. Record the actual rule-based result, Git commit, and run date after checking the browser or an automated evaluation.
-Run date: 2026-09-28
+
 
 Command: `ContractAnalyzerApplication` with `EVAL-001-agreement.txt` and `testdata/agreement.txt`.
 

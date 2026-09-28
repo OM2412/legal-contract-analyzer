@@ -65,7 +65,10 @@ To see why AI suggestions are separate, upload `testdata/alternate-agreement.txt
 
 ## Current limits
 
-- PDFs must contain extractable text. Scanned PDFs need OCR.
+- Text-based PDFs use embedded text. Fully image-only PDFs of up to 20 pages use local Tesseract OCR with English language data.
+- Tesseract must be installed on the machine running the backend. On Windows the default path is `C:\Program Files\Tesseract-OCR\tesseract.exe`; set `TESSERACT_PATH` if installed elsewhere.
+- Mixed PDFs containing both text pages and scanned pages are not fully supported yet: OCR currently runs only when the PDF has no extractable text at all.
+- OCR can misread characters. Check every quoted result against the original scanned page before relying on it.
 - PDF uploads are limited to 10 MB and 100 pages; TXT uploads to 1 MB.
 - The rule-based extractor recognizes a narrow set of payment wording.
 - AI suggestions are limited to documents of 12,000 code points and depend on the local model.

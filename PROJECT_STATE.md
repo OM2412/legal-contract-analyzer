@@ -68,7 +68,7 @@ mvn org.codehaus.mojo:exec-maven-plugin:3.6.4:java '-Dexec.mainClass=com.omjadon
 - EVAL-016: a quoted 30-day nonoperative example was initially extracted as one false positive alongside the correct 45-day clause. A narrow guard now excludes the disclaimed example. The baseline false positive remains in its label.
 - Evaluation samples are self-written and were used to discover and fix defects. Do not present their post-fix results as independent benchmark accuracy. The 20 varied-excerpt starting target is not yet complete; EVAL-017 through EVAL-020 remain.
 - Check `git status -sb` and `git log -4 --oneline` to verify the latest pushed commits. `pom.xml` had an uncommitted packaging change; inspect its diff before using or committing it.
-- Next implementation sequence: finish the labeled evaluation set, report baseline counts separately from post-fix checks, inspect the packaging change, then continue toward OCR, persistent data, React UI, security and deployment.
+- Next implementation sequence: keep the 20 self-written evaluation examples and their baseline/post-fix observations distinct; extend OCR to mixed text/scanned PDFs if needed, then continue persistent data, React UI, security and deployment. These examples are development cases, not an independent accuracy benchmark.
 ## Packaging checkpoint — 28 September 2026
 
 - Latest confirmed GitHub commit: `a1725b1` (`Package executable Spring Boot JAR`); `main` and `origin/main` are aligned and the working tree was clean.
@@ -76,4 +76,4 @@ mvn org.codehaus.mojo:exec-maven-plugin:3.6.4:java '-Dexec.mainClass=com.omjadon
 - Executable output: `target/legal-contract-analyzer-0.1.0-SNAPSHOT-exec.jar`.
 - Run locally with `java -jar "target/legal-contract-analyzer-0.1.0-SNAPSHOT-exec.jar"` and open `http://127.0.0.1:8080/`. - Executable JAR verified on port 8081: the PDF review API returned Agreement and SOW evidence with page numbers, a 30-versus-60-day comparison, and `SOW_TEXT_CANDIDATE`.
 - An earlier package attempt failed while renaming a JAR inside OneDrive's `target` folder; the classifier resolved that build failure.
-- Next: verify the JAR-served page and one PDF review, then continue EVAL-017–020. Deployment, OCR, database, React UI and the 3D landing page remain future work.
+- The executable JAR served the PDF review API locally; the two-page image-only OCR test passed. Fully image-only PDFs of up to 20 pages now use local Tesseract. Mixed text/scanned PDFs still need per-page OCR; production deployment, database and React/3D UI remain future work.
