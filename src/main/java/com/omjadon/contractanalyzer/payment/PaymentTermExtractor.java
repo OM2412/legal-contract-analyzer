@@ -252,7 +252,19 @@ public final class PaymentTermExtractor {
                         || context.contains("non-binding")
                         || context.contains("does not create an obligation");
 
-        return describedAsExample && explicitlyNonOperative;
+               if (describedAsExample && explicitlyNonOperative) {
+            return true;
+        }
+
+        String following = text.substring(
+                end + 1,
+                Math.min(text.length(), end + 121)
+        ).stripLeading().toLowerCase(Locale.ROOT);
+
+        return describedAsExample
+                && following.startsWith(
+                        "this example creates no payment obligation."
+                );
     }
 
     public static Optional<PaymentTerm> extract(SourceDocument document) {

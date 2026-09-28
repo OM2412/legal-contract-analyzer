@@ -1,0 +1,1 @@
+Example wording: "Client shall pay Provider the project fee within 30 calendar days after receipt of the invoice." This example creates no payment obligation. Client shall pay Provider the project fee within 45 calendar days after receipt of the invoice.
