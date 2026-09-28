@@ -1,84 +1,50 @@
-# Legal Contract Analyzer - Project State
+# Legal Contract Analyzer — Project State
 
 ## Goal
 
-Build an evidence-based contract review platform. The current working feature compares payment terms in a software service Agreement and Statement of Work (SOW).
+Build an evidence-based contract review platform for software service Agreements and Statements of Work (SOWs). The current working feature reviews payment terms, shows source evidence, and flags uncertainty for a human reviewer. It does not provide legal advice.
 
-## Current implementation
+## Development environment
 
-- Java 25, Maven, Spring Boot, and a static HTML/JavaScript interface.
-- Upload text-based PDF or UTF-8 TXT documents.
-- Extract supported payment clauses with exact source quotes, text offsets, and PDF page numbers.
-- Compare Agreement and SOW payment terms and scan supported payment-priority wording.
-- Show every recognized clause when a document contains multiple matches; flag the review for human attention instead of selecting one silently.
-- Apply an illustrative maximum-calendar-days policy, configurable in the browser; default is 30 days after invoice receipt.
-- Keep invoice receipt, invoice date, and final acceptance as distinct payment triggers.
-- Treat unspecified day units as unknown; do not convert business days into calendar days.
-- Use local Ollama (`qwen3:4b`) for optional quote suggestions. Verify suggested quotes and extracted details against source text.
-- Keep AI suggestions separate from the rule-based review verdict.
-- Print the browser review or save it as a PDF.
-- Maven tests cover supported wording, ambiguity, policy decisions, and AI candidate verification.
-- Detect some additional Client-to-Provider project-fee wording that the extractor cannot parse. Mark the overall review `REVIEW_REQUIRED` and show its exact source quote.
-- Show the term-comparison explanation and the reason for `REVIEW_REQUIRED` in the browser.
-- Run a repeatable synthetic evaluation from `testdata/`; its cases include supported wording, ambiguity, negative examples, and partial coverage.
-## Supported rule-based wording examples
+- Windows 11, VS Code
+- Java 25, Maven 3.9.16
+- Spring Boot backend with a static HTML/JavaScript browser interface
+- Apache PDFBox for text-based PDF extraction
+- Optional local Ollama model: `qwen3:4b`
+- Project folder: `C:\Users\omjad\OneDrive\Desktop\legal-contract-analyzer`
+- Git branch: `main`
+- Latest confirmed commit: `698b33b` — `Record negative payment evaluation case`
+- No Git remote was shown by `git remote -v` when this file was updated.
 
-- "Client shall pay Provider the project fee within 30 calendar days after receipt of the invoice."
-- "The Client must pay the Provider the project fee within 45 calendar days after receiving the invoice."
-- "Client shall pay Provider the project fee within 30 calendar days after final acceptance."
-- "Client shall pay Provider the project fee within 30 calendar days after the invoice date."
-- "Client shall pay Provider the project fee no later than 30 calendar days after receipt of the invoice."
+## Working features
 
-These are examples of narrow supported patterns, not a claim that equivalent contract language is generally covered.
+- Upload an Agreement and SOW as text-based PDF or UTF-8 TXT.
+- Extract supported payment obligations and show exact quotes, text offsets, and PDF page numbers.
+- Compare days, day units, trigger, payer, payee, and payment scope.
+- Scan supported payment-priority wording.
+- Show all recognized matches if a document contains multiple payment clauses, and require human review instead of selecting one silently.
+- Apply a configurable illustrative calendar-day policy; default is 30 days after invoice receipt.
+- Distinguish invoice receipt, invoice date, final acceptance, and other/unknown triggers.
+- Leave business-day conversion and unclear wording unassessed where appropriate.
+- Show explanations, warnings, document identity, and Print / Save as PDF in the browser.
+- Offer optional local Ollama quote suggestions, verified against extracted document text. These suggestions cannot change the rule-based review verdict.
 
-## Example files
+## Latest evaluation work
 
-The `testdata/` folder contains Agreement and SOW samples, including invoice-date, final-acceptance, business-day, unspecified-day, multiple-clause, and "no later than" examples.
+See `docs/payment-evaluation-protocol.md` and `testdata/evaluation/`.
 
-`alternate-agreement.txt` links two sentences: Provider issues the project-fee invoice, and Client must pay that invoice within 45 calendar days of receiving it. The rule-based extractor now recognizes this specific wording and cites both sentences as evidence. Local AI suggestions remain separate from the rule-based verdict.
+- EVAL-001–005 were used during development. Do not report their post-fix results as independent benchmark accuracy.
+- EVAL-004: passive-voice payment clause. The extractor recognizes Customer as payer, Vendor as payee, 20 calendar days, and invoice receipt.
+- EVAL-005: two installments, 40% after signing and 60% after final acceptance. Both are separately extracted; the review requires human attention. The CLI now displays both matches and their source quotes.
+- EVAL-006: a negated payment statement mentioning an invoice. Baseline extraction reports zero Agreement payment obligations and zero false positives for this one sample.
+- EVAL-002 has a partial-coverage fixture; verify whether its annotation file exists before treating the evaluation set as completely labeled.
+- The planned set is 20 varied, pre-labeled excerpts. Freeze labels before computing evaluation metrics. Report development examples separately from held-out results.
+- Never commit private client contracts or identifying details.
 
-## Run
+## Run locally
 
 From the project folder:
 
 ```powershell
 mvn test
 mvn org.codehaus.mojo:exec-maven-plugin:3.6.4:java '-Dexec.mainClass=com.omjadon.contractanalyzer.LegalContractWebApplication'
-```
-
-Open `http://127.0.0.1:8080/`.
-
-Ollama is required only for optional AI suggestions. On this Windows machine its executable is at `$env:LOCALAPPDATA\Programs\Ollama\ollama.exe`.
-
-## Current limits
-
-- Scanned PDFs require OCR and are not supported yet.
-- Rule-based extraction covers only tested wording patterns.
-- A recognized quote does not establish whether the entire document is legally effective or which term controls.
-- AI suggestions must be checked against the original documents.
-- Policy `P-DEMO-30` is an illustrative business preference, not a legal standard.
-- The additional-wording scanner recognizes only specific wording starts. A review without a warning does not prove that every payment obligation was found.
-## Planned phases
-
-1. Payment-term MVP: implemented for supported wording.
-2. Payment wording coverage and ambiguity handling: in progress.
-3. Broader contract clauses, document processing, and evaluation benchmark: planned.
-4. Persistent review data and user accounts: planned.
-5. React interface with a polished, animated 3D landing page and accessible review experience: planned.
-6. Deployment, security review, and production readiness: planned.
-
-These phases describe direction, not a completion percentage.
-
-## Working style
-
-The user edits files manually in VS Code on Windows. Give one file or step at a time, its PowerShell open/create command, complete code when replacing a file, and a check for the result. Do not provide a ZIP.
-
-Inspect an existing file before changing it. Use `mvn test` without `clean` because OneDrive has previously locked files under `target/`.
-
-## Git
-
-The project has local Git commits on the `main` branch. Check `git status --short` and `git log -3 --oneline` before describing the latest commit or staging further changes.
-
-## Next step
-
-Confirm `mvn test` and browser behavior for the partial-coverage example, then record the verified evaluation result. After that, assess payment wording against more varied examples before claiming broader coverage. The planned React UI, animated 3D landing page, OCR, database, and deployment remain future phases.
