@@ -38,7 +38,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 public class ReviewController {
-
     private final LocalOllamaClient ollamaClient;
 
     public ReviewController(LocalOllamaClient ollamaClient) {
@@ -87,6 +86,14 @@ public class ReviewController {
         response.put("reviewReason", result.reviewReason());
         response.put("agreementVersion", agreement.version());
         response.put("sowVersion", sow.version());
+        response.put(
+                "agreementOcrPages",
+                agreement.ocrPages().stream().sorted().toList()
+        );
+        response.put(
+                "sowOcrPages",
+                sow.ocrPages().stream().sorted().toList()
+        );
 
         response.put(
                 "comparisonStatus",
@@ -95,11 +102,11 @@ public class ReviewController {
                         .orElse(null)
         );
         response.put(
-        "comparisonExplanation",
-        result.comparison()
-                .map(comparison -> comparison.explanation())
-                .orElse(null)
-);
+                "comparisonExplanation",
+                result.comparison()
+                        .map(comparison -> comparison.explanation())
+                        .orElse(null)
+        );
 
         response.put(
                 "agreementAssessment",
@@ -145,7 +152,8 @@ public class ReviewController {
                                 return evidence(sow, span, sowPdf);
                             }
                             throw new IllegalArgumentException(
-                                    "Precedence evidence has an unknown document ID"
+                                    "Precedence evidence has an unknown "
+                                            + "document ID"
                             );
                         })
                         .toList()
@@ -168,7 +176,9 @@ public class ReviewController {
                 "agreementEvidence",
                 result.agreementTerm()
                         .map(term -> evidence(
-                                agreement, term.evidence(), agreementPdf
+                                agreement,
+                                term.evidence(),
+                                agreementPdf
                         ))
                         .orElse(null)
         );
@@ -176,7 +186,9 @@ public class ReviewController {
                 "sowEvidence",
                 result.sowTerm()
                         .map(term -> evidence(
-                                sow, term.evidence(), sowPdf
+                                sow,
+                                term.evidence(),
+                                sowPdf
                         ))
                         .orElse(null)
         );
@@ -185,7 +197,9 @@ public class ReviewController {
                 "agreementMatches",
                 result.agreementMatches().stream()
                         .map(term -> evidence(
-                                agreement, term.evidence(), agreementPdf
+                                agreement,
+                                term.evidence(),
+                                agreementPdf
                         ))
                         .toList()
         );
@@ -193,7 +207,9 @@ public class ReviewController {
                 "sowMatches",
                 result.sowMatches().stream()
                         .map(term -> evidence(
-                                sow, term.evidence(), sowPdf
+                                sow,
+                                term.evidence(),
+                                sowPdf
                         ))
                         .toList()
         );
@@ -267,6 +283,8 @@ public class ReviewController {
 
         return Map.of(
                 "status", "SUGGESTIONS_ONLY",
+                "ocrPages", document.ocrPages().stream()
+                        .sorted().toList(),
                 "evidence", verifiedQuotes.stream()
                         .map(span -> evidence(
                                 document,
@@ -355,7 +373,8 @@ public class ReviewController {
             return new SourceDocument(
                     documentId,
                     textVersion(loaded.text()),
-                    loaded.text()
+                    loaded.text(),
+                    loaded.ocrPages()
             );
         } finally {
             Files.deleteIfExists(temporary);
@@ -379,6 +398,27 @@ public class ReviewController {
                     PdfPageLocator.locate(document, span);
             details.put("firstPage", pages.firstPage());
             details.put("lastPage", pages.lastPage());
+
+            boolean anyOcr = false;
+            boolean allOcr = true;
+
+            for (int page = pages.firstPage();
+                    page <= pages.lastPage(); page++) {
+                boolean usedOcr = document.ocrPages().contains(page);
+                anyOcr |= usedOcr;
+                allOcr &= usedOcr;
+            }
+
+            details.put(
+                    "textSource",
+                    !anyOcr
+                            ? "PDF_TEXT"
+                            : allOcr
+                                    ? "OCR_TEXT"
+                                    : "MIXED_OCR_AND_PDF_TEXT"
+            );
+        } else {
+            details.put("textSource", "TXT");
         }
 
         return details;

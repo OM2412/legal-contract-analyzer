@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -56,10 +58,20 @@ public final class PdfDocumentLoader {
             stripper.setPageEnd("\f");
 
             String extracted = stripper.getText(pdf);
+
             if (extracted.replace("\f", "").isBlank()) {
-    String scannedText = new ScannedPdfOcr().extract(pdf);
-    return new SourceDocument(documentId, version, scannedText);
-}
+                String scannedText = new ScannedPdfOcr().extract(pdf);
+                Set<Integer> ocrPages = new HashSet<>();
+
+                for (int page = 1; page <= pageCount; page++) {
+                    ocrPages.add(page);
+                }
+
+                return new SourceDocument(
+                        documentId, version, scannedText, ocrPages
+                );
+            }
+
             String[] pageTexts = extracted.split("\f", -1);
 
             if (pageTexts.length != pageCount + 1
@@ -70,20 +82,20 @@ public final class PdfDocumentLoader {
             }
 
             ScannedPdfOcr ocr = new ScannedPdfOcr();
-            int ocrPages = 0;
+            Set<Integer> ocrPages = new HashSet<>();
             StringBuilder combined = new StringBuilder();
 
             for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
                 String pageText = pageTexts[pageIndex];
 
                 if (pageText.isBlank()) {
-                    ocrPages++;
-                    if (ocrPages > ScannedPdfOcr.MAX_OCR_PAGES) {
+                    if (ocrPages.size() >= ScannedPdfOcr.MAX_OCR_PAGES) {
                         throw new IOException(
                                 "PDF has more than 20 pages requiring OCR"
                         );
                     }
                     pageText = ocr.extractPage(pdf, pageIndex);
+                    ocrPages.add(pageIndex + 1);
                 }
 
                 if (combined.length() + pageText.length() + 1
@@ -103,7 +115,9 @@ public final class PdfDocumentLoader {
                 );
             }
 
-            return new SourceDocument(documentId, version, text);
+            return new SourceDocument(
+                    documentId, version, text, ocrPages
+            );
         }
     }
 }

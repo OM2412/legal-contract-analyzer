@@ -165,11 +165,12 @@ public final class ContractAnalyzerApplication {
             );
         }
 
-        return new SourceDocument(
-                documentId,
-                textVersion(loaded.text()),
-                loaded.text()
-        );
+      return new SourceDocument(
+        documentId,
+        textVersion(loaded.text()),
+        loaded.text(),
+        loaded.ocrPages()
+);
     }
 
     private static String textVersion(String text) {

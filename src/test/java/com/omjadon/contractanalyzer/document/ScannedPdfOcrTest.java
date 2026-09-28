@@ -23,6 +23,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.Set;
 
 class ScannedPdfOcrTest {
     @TempDir
@@ -79,7 +80,7 @@ class ScannedPdfOcrTest {
 
         SourceDocument document =
                 new PdfDocumentLoader().load(file, "mixed", "1");
-
+assertEquals(Set.of(2), document.ocrPages());
         assertTrue(document.text().contains(
                 "MASTER SERVICE AGREEMENT"
         ));
@@ -90,6 +91,7 @@ class ScannedPdfOcrTest {
             throws Exception {
         SourceDocument document =
                 new PdfDocumentLoader().load(file, "scanned", "1");
+                assertEquals(Set.of(1, 2), document.ocrPages());
         assertPaymentQuoteOnPageTwo(document);
     }
 
