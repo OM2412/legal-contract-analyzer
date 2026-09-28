@@ -260,6 +260,7 @@
         <div class="metric"><small>Term comparison</small><strong id="comparisonStatus"></strong></div>
         <div class="metric"><small>Precedence scan</small><strong id="precedenceStatus"></strong></div>
       </div>
+      <p id="reviewReason" class="notice" hidden></p>
       <div id="comparisonExplanation" class="muted"></div>
       <div id="unrecognizedWarning" class="notice" role="status" hidden></div>
 
@@ -638,6 +639,9 @@
       }
 
       setText("reviewStatus", readable(data.reviewStatus));
+      const reviewReason = document.getElementById("reviewReason");
+reviewReason.textContent = data.reviewReason ?? "";
+reviewReason.hidden = !data.reviewReason;
       setText("comparisonStatus", readable(data.comparisonStatus));
       setText(
   "comparisonExplanation",

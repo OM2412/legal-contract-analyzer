@@ -41,6 +41,37 @@ public final class PaymentReviewService {
             agreementUnrecognized = List.copyOf(agreementUnrecognized);
             sowUnrecognized = List.copyOf(sowUnrecognized);
         }
+        public String reviewReason() {
+    if (status != ReviewStatus.REVIEW_REQUIRED) {
+        return null;
+    }
+
+    if (!agreementUnrecognized.isEmpty()
+            || !sowUnrecognized.isEmpty()) {
+        return "Additional payment wording was found but could not "
+                + "be parsed. Check the flagged source passages.";
+    }
+
+    if (agreementMatches.size() > 1 || sowMatches.size() > 1) {
+        return "Multiple supported payment clauses were found in "
+                + "one document. No single clause was selected.";
+    }
+
+    if (comparison.isPresent()
+            && comparison.orElseThrow().status()
+                    == PaymentTermComparator.Status.UNABLE_TO_COMPARE) {
+        return comparison.orElseThrow().explanation();
+    }
+
+    if (precedence.status()
+            == PaymentPrecedenceDetector.Status.MULTIPLE_RULES) {
+        return "Multiple payment-priority wordings were found. "
+                + "Their effect requires manual review.";
+    }
+
+    return "The payment terms may differ, but no supported "
+            + "payment-priority wording selected a textual candidate.";
+}
     }
 
     public static Review analyze(

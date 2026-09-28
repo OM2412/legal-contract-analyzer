@@ -84,6 +84,7 @@ public class ReviewController {
         Map<String, Object> response = new LinkedHashMap<>();
 
         response.put("reviewStatus", result.status().name());
+        response.put("reviewReason", result.reviewReason());
         response.put("agreementVersion", agreement.version());
         response.put("sowVersion", sow.version());
 
