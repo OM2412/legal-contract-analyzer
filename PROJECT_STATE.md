@@ -59,3 +59,13 @@ mvn org.codehaus.mojo:exec-maven-plugin:3.6.4:java '-Dexec.mainClass=com.omjadon
 - EVAL-011: two milestone payment obligations without day counts were both missed. Initially the review was `INCOMPLETE`. A narrow coverage-scanner change now flags the sentence and produces `REVIEW_REQUIRED`, but does not extract either obligation.
 - Next: continue labeling varied evaluation samples before running them. Record misses and false positives honestly; do not report accuracy from samples used to tune extraction. Keep the optional Ollama suggestions separate from deterministic results.
 - Working style: one file or step at a time; give PowerShell command, paste-ready content, and verification. Do not use `mvn clean` on this OneDrive folder.
+## Evaluation continuation — 28 September 2026, late evening
+
+- EVAL-012: late-fee threshold was correctly not extracted as a primary payment deadline; baseline false positives: zero.
+- EVAL-013: `thirty (30) calendar days` was missed. The scanner returned `REVIEW_REQUIRED`; written and numeric values have not yet been implemented or cross-checked.
+- EVAL-014: payment method `by electronic bank transfer` initially caused one miss. A narrow extractor change now extracts the 30-calendar-day invoice-receipt term; its baseline miss remains recorded separately.
+- EVAL-015: 45 days after Provider **submits** an invoice was missed and flagged `REVIEW_REQUIRED`. Do not relabel invoice submission as invoice receipt.
+- EVAL-016: a quoted 30-day nonoperative example was initially extracted as one false positive alongside the correct 45-day clause. A narrow guard now excludes the disclaimed example. The baseline false positive remains in its label.
+- Evaluation samples are self-written and were used to discover and fix defects. Do not present their post-fix results as independent benchmark accuracy. The 20 varied-excerpt starting target is not yet complete; EVAL-017 through EVAL-020 remain.
+- Check `git status -sb` and `git log -4 --oneline` to verify the latest pushed commits. `pom.xml` had an uncommitted packaging change; inspect its diff before using or committing it.
+- Next implementation sequence: finish the labeled evaluation set, report baseline counts separately from post-fix checks, inspect the packaging change, then continue toward OCR, persistent data, React UI, security and deployment.
