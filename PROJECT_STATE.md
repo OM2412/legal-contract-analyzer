@@ -48,3 +48,14 @@ From the project folder:
 ```powershell
 mvn test
 mvn org.codehaus.mojo:exec-maven-plugin:3.6.4:java '-Dexec.mainClass=com.omjadon.contractanalyzer.LegalContractWebApplication'
+## Continuation checkpoint — 28 September 2026
+
+- Git branch: `main`; latest confirmed GitHub commit: `dbe3c99` (`Record payment evaluations and flag milestone wording`).
+- `mvn test` passed before that commit. `main` and `origin/main` were aligned afterward.
+- `pom.xml` has an uncommitted change. Inspect it before deciding whether to keep or commit it.
+- Payment evaluation is in progress under `testdata/evaluation/`; keep baseline observations separate from improvements made after seeing a sample.
+- EVAL-009: a payment obligation with a disputed-amount exception was missed; review status was `REVIEW_REQUIRED`.
+- EVAL-010: a 20-business-day term triggered by invoice date was extracted with the expected fields. Its policy assessment was `UNABLE_TO_ASSESS` because the policy uses calendar days.
+- EVAL-011: two milestone payment obligations without day counts were both missed. Initially the review was `INCOMPLETE`. A narrow coverage-scanner change now flags the sentence and produces `REVIEW_REQUIRED`, but does not extract either obligation.
+- Next: continue labeling varied evaluation samples before running them. Record misses and false positives honestly; do not report accuracy from samples used to tune extraction. Keep the optional Ollama suggestions separate from deterministic results.
+- Working style: one file or step at a time; give PowerShell command, paste-ready content, and verification. Do not use `mvn clean` on this OneDrive folder.
