@@ -16,7 +16,8 @@ public final class PaymentClauseCoverageScanner {
             "\\b(?:(?:Client|Customer)"
                     + "\\s+(?:shall|must)\\s+pay\\s+"
                     + "(?:the\\s+)?(?:Provider|Vendor)"
-                    + "\\s+the\\s+(?:project|implementation)\\s+fee"
+                    + "\\s+(?:\\d{1,3}%\\s+of\\s+)?the\\s+"
+                    + "(?:project|implementation)\\s+fee"
                     + "|The\\s+project\\s+fee\\s+is\\s+due\\s+and"
                     + "\\s+payable\\s+by\\s+Client\\s+to\\s+Provider)\\b",
             Pattern.CASE_INSENSITIVE
