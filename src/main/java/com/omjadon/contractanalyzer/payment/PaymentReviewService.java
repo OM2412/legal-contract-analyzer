@@ -1,5 +1,6 @@
 package com.omjadon.contractanalyzer.payment;
 
+import com.omjadon.contractanalyzer.model.EvidenceSpan;
 import com.omjadon.contractanalyzer.model.SourceDocument;
 
 import java.util.List;
@@ -30,11 +31,15 @@ public final class PaymentReviewService {
             Optional<PaymentPolicyEvaluator.Assessment> sowAssessment,
             Optional<PaymentPolicyEvaluator.Assessment> textualCandidateAssessment,
             List<PaymentTerm> agreementMatches,
-            List<PaymentTerm> sowMatches
+            List<PaymentTerm> sowMatches,
+            List<EvidenceSpan> agreementUnrecognized,
+            List<EvidenceSpan> sowUnrecognized
     ) {
         public Review {
             agreementMatches = List.copyOf(agreementMatches);
             sowMatches = List.copyOf(sowMatches);
+            agreementUnrecognized = List.copyOf(agreementUnrecognized);
+            sowUnrecognized = List.copyOf(sowUnrecognized);
         }
     }
 
@@ -51,6 +56,15 @@ public final class PaymentReviewService {
                 PaymentTermExtractor.extractAll(agreement);
         List<PaymentTerm> sowMatches =
                 PaymentTermExtractor.extractAll(sow);
+
+        List<EvidenceSpan> agreementUnrecognized =
+                PaymentClauseCoverageScanner.findUnrecognized(
+                        agreement, agreementMatches
+                );
+        List<EvidenceSpan> sowUnrecognized =
+                PaymentClauseCoverageScanner.findUnrecognized(
+                        sow, sowMatches
+                );
 
         Optional<PaymentTerm> agreementTerm =
                 uniqueTerm(agreementMatches);
@@ -74,7 +88,10 @@ public final class PaymentReviewService {
                         )
                 );
 
-        if (agreementMatches.size() > 1 || sowMatches.size() > 1) {
+        if (agreementMatches.size() > 1
+                || sowMatches.size() > 1
+                || !agreementUnrecognized.isEmpty()
+                || !sowUnrecognized.isEmpty()) {
             return new Review(
                     ReviewStatus.REVIEW_REQUIRED,
                     agreementTerm,
@@ -85,7 +102,9 @@ public final class PaymentReviewService {
                     sowAssessment,
                     Optional.empty(),
                     agreementMatches,
-                    sowMatches
+                    sowMatches,
+                    agreementUnrecognized,
+                    sowUnrecognized
             );
         }
 
@@ -100,7 +119,9 @@ public final class PaymentReviewService {
                     sowAssessment,
                     Optional.empty(),
                     agreementMatches,
-                    sowMatches
+                    sowMatches,
+                    agreementUnrecognized,
+                    sowUnrecognized
             );
         }
 
@@ -154,7 +175,9 @@ public final class PaymentReviewService {
                 sowAssessment,
                 candidate,
                 agreementMatches,
-                sowMatches
+                sowMatches,
+                agreementUnrecognized,
+                sowUnrecognized
         );
     }
 

@@ -30,6 +30,13 @@ This is a small, synthetic evaluation set for the rule-based extractor. It is no
 | --- | --- |
 | `testdata/conflicting-payment-agreement.txt` | Show every matched clause; no single Agreement assessment |
 | `testdata/mixed-payment-agreement.txt` | Show both wording types; review required; no single Agreement assessment |
+## Expected partial coverage
+
+| Agreement file | Expected behavior |
+| --- | --- |
+| `testdata/partially-recognized-agreement.txt` | Recognize the 30-day clause, flag the unparsed `ninety (90)` clause with exact source evidence, and set overall status to `REVIEW_REQUIRED` |
+
+The coverage scanner checks only specific Client-to-Provider project-fee wording starts. A document with no warning is not proof that every payment clause was found.
 ## Expected negative control
 
 | Agreement file | Expected behavior |

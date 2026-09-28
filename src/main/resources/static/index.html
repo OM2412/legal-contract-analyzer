@@ -260,6 +260,8 @@
         <div class="metric"><small>Term comparison</small><strong id="comparisonStatus"></strong></div>
         <div class="metric"><small>Precedence scan</small><strong id="precedenceStatus"></strong></div>
       </div>
+      <div id="comparisonExplanation" class="muted"></div>
+      <div id="unrecognizedWarning" class="notice" role="status" hidden></div>
 
       <div class="cards">
         <article class="panel">
@@ -316,6 +318,54 @@
   const documentIdentity = document.getElementById("documentIdentity");
 
   let reviewedFiles = null;
+  function showUnrecognized(data) {
+  const container = document.getElementById("unrecognizedWarning");
+  container.replaceChildren();
+
+  const groups = [
+    ["Agreement", data.agreementUnrecognized ?? []],
+    ["Statement of Work", data.sowUnrecognized ?? []]
+  ].filter(([, items]) => items.length > 0);
+
+  container.hidden = groups.length === 0;
+  if (groups.length === 0) return;
+
+  const heading = document.createElement("strong");
+  heading.textContent =
+    "Review required: additional payment wording was not parsed.";
+
+  const explanation = document.createElement("p");
+  explanation.textContent =
+    "The policy assessments below apply only to recognized quotes. " +
+    "Check these additional passages in the original documents.";
+
+  container.append(heading, explanation);
+
+  for (const [label, items] of groups) {
+    const groupHeading = document.createElement("h4");
+    groupHeading.textContent = label;
+    container.append(groupHeading);
+
+    for (const item of items) {
+      const quote = document.createElement("blockquote");
+      quote.textContent = item.quote;
+
+      const location = document.createElement("div");
+      location.className = "location";
+
+      const source = item.firstPage
+        ? `Page ${item.firstPage}` +
+          (item.lastPage !== item.firstPage
+            ? `–${item.lastPage}` : "")
+        : "TXT document";
+
+      location.textContent =
+        `${source} · Text offsets ${item.start}–${item.end}`;
+
+      container.append(quote, location);
+    }
+  }
+}
 
   function readable(value) {
     return value ? value.replaceAll("_", " ") : "Not assessed";
@@ -589,6 +639,10 @@
 
       setText("reviewStatus", readable(data.reviewStatus));
       setText("comparisonStatus", readable(data.comparisonStatus));
+      setText(
+  "comparisonExplanation",
+  data.comparisonExplanation ?? ""
+);
       setText("precedenceStatus", readable(data.precedenceStatus));
       setText("agreementAssessment", readable(data.agreementAssessment));
       setText("sowAssessment", readable(data.sowAssessment));
@@ -626,6 +680,7 @@ showEvidence(
 );
       showPrecedenceEvidence(data.precedenceEvidence);
       showDocumentIdentity(agreementFile, sowFile, data);
+      showUnrecognized(data);
 
       reviewedFiles = { agreementFile, sowFile };
       aiButton.disabled = false;

@@ -11,6 +11,7 @@ import com.omjadon.contractanalyzer.model.SourceDocument;
 import com.omjadon.contractanalyzer.payment.PaymentPolicy;
 import com.omjadon.contractanalyzer.payment.PaymentReviewService;
 import com.omjadon.contractanalyzer.payment.PaymentTerm;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -23,6 +24,7 @@ import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -74,16 +76,30 @@ public class ReviewController {
         PaymentReviewService.Review result =
                 PaymentReviewService.analyze(agreement, sow, policy);
 
+        boolean agreementPdf =
+                isPdf(agreementFile.getOriginalFilename());
+        boolean sowPdf =
+                isPdf(sowFile.getOriginalFilename());
+
         Map<String, Object> response = new LinkedHashMap<>();
+
         response.put("reviewStatus", result.status().name());
         response.put("agreementVersion", agreement.version());
-response.put("sowVersion", sow.version());
+        response.put("sowVersion", sow.version());
+
         response.put(
                 "comparisonStatus",
                 result.comparison()
                         .map(comparison -> comparison.status().name())
                         .orElse(null)
         );
+        response.put(
+        "comparisonExplanation",
+        result.comparison()
+                .map(comparison -> comparison.explanation())
+                .orElse(null)
+);
+
         response.put(
                 "agreementAssessment",
                 result.agreementAssessment()
@@ -97,18 +113,22 @@ response.put("sowVersion", sow.version());
                         .orElse(null)
         );
         response.put(
-        "agreementExplanation",
-        result.agreementAssessment()
-                .map(assessment -> assessment.explanation())
-                .orElse(null)
-);
-response.put(
-        "sowExplanation",
-        result.sowAssessment()
-                .map(assessment -> assessment.explanation())
-                .orElse(null)
-);
-        response.put("precedenceStatus", result.precedence().status().name());
+                "agreementExplanation",
+                result.agreementAssessment()
+                        .map(assessment -> assessment.explanation())
+                        .orElse(null)
+        );
+        response.put(
+                "sowExplanation",
+                result.sowAssessment()
+                        .map(assessment -> assessment.explanation())
+                        .orElse(null)
+        );
+
+        response.put(
+                "precedenceStatus",
+                result.precedence().status().name()
+        );
         response.put(
                 "precedenceEvidence",
                 result.precedence().evidence().stream()
@@ -116,17 +136,12 @@ response.put(
                             if (span.documentId().equals(
                                     agreement.documentId())) {
                                 return evidence(
-                                        agreement,
-                                        span,
-                                        isPdf(agreementFile.getOriginalFilename())
+                                        agreement, span, agreementPdf
                                 );
                             }
-                            if (span.documentId().equals(sow.documentId())) {
-                                return evidence(
-                                        sow,
-                                        span,
-                                        isPdf(sowFile.getOriginalFilename())
-                                );
+                            if (span.documentId().equals(
+                                    sow.documentId())) {
+                                return evidence(sow, span, sowPdf);
                             }
                             throw new IllegalArgumentException(
                                     "Precedence evidence has an unknown document ID"
@@ -134,6 +149,7 @@ response.put(
                         })
                         .toList()
         );
+
         response.put(
                 "textualCandidateAssessment",
                 result.textualCandidateAssessment()
@@ -141,18 +157,17 @@ response.put(
                         .orElse(null)
         );
         response.put(
-        "textualCandidateExplanation",
-        result.textualCandidateAssessment()
-                .map(assessment -> assessment.explanation())
-                .orElse(null)
-);
+                "textualCandidateExplanation",
+                result.textualCandidateAssessment()
+                        .map(assessment -> assessment.explanation())
+                        .orElse(null)
+        );
+
         response.put(
                 "agreementEvidence",
                 result.agreementTerm()
                         .map(term -> evidence(
-                                agreement,
-                                term.evidence(),
-                                isPdf(agreementFile.getOriginalFilename())
+                                agreement, term.evidence(), agreementPdf
                         ))
                         .orElse(null)
         );
@@ -160,32 +175,43 @@ response.put(
                 "sowEvidence",
                 result.sowTerm()
                         .map(term -> evidence(
-                                sow,
-                                term.evidence(),
-                                isPdf(sowFile.getOriginalFilename())
+                                sow, term.evidence(), sowPdf
                         ))
                         .orElse(null)
         );
+
         response.put(
-        "agreementMatches",
-        result.agreementMatches().stream()
-                .map(term -> evidence(
-                        agreement,
-                        term.evidence(),
-                        isPdf(agreementFile.getOriginalFilename())
-                ))
-                .toList()
-);
-response.put(
-        "sowMatches",
-        result.sowMatches().stream()
-                .map(term -> evidence(
-                        sow,
-                        term.evidence(),
-                        isPdf(sowFile.getOriginalFilename())
-                ))
-                .toList()
-);
+                "agreementMatches",
+                result.agreementMatches().stream()
+                        .map(term -> evidence(
+                                agreement, term.evidence(), agreementPdf
+                        ))
+                        .toList()
+        );
+        response.put(
+                "sowMatches",
+                result.sowMatches().stream()
+                        .map(term -> evidence(
+                                sow, term.evidence(), sowPdf
+                        ))
+                        .toList()
+        );
+
+        response.put(
+                "agreementUnrecognized",
+                result.agreementUnrecognized().stream()
+                        .map(span -> evidence(
+                                agreement, span, agreementPdf
+                        ))
+                        .toList()
+        );
+        response.put(
+                "sowUnrecognized",
+                result.sowUnrecognized().stream()
+                        .map(span -> evidence(sow, span, sowPdf))
+                        .toList()
+        );
+
         response.put("policyMaxDays", maxDays);
         response.put(
                 "notice",
