@@ -18,7 +18,9 @@ Build an evidence-based contract review platform. The current working feature co
 - Keep AI suggestions separate from the rule-based review verdict.
 - Print the browser review or save it as a PDF.
 - Maven tests cover supported wording, ambiguity, policy decisions, and AI candidate verification.
-
+- Detect some additional Client-to-Provider project-fee wording that the extractor cannot parse. Mark the overall review `REVIEW_REQUIRED` and show its exact source quote.
+- Show the term-comparison explanation and the reason for `REVIEW_REQUIRED` in the browser.
+- Run a repeatable synthetic evaluation from `testdata/`; its cases include supported wording, ambiguity, negative examples, and partial coverage.
 ## Supported rule-based wording examples
 
 - "Client shall pay Provider the project fee within 30 calendar days after receipt of the invoice."
@@ -55,7 +57,7 @@ Ollama is required only for optional AI suggestions. On this Windows machine its
 - A recognized quote does not establish whether the entire document is legally effective or which term controls.
 - AI suggestions must be checked against the original documents.
 - Policy `P-DEMO-30` is an illustrative business preference, not a legal standard.
-
+- The additional-wording scanner recognizes only specific wording starts. A review without a warning does not prove that every payment obligation was found.
 ## Planned phases
 
 1. Payment-term MVP: implemented for supported wording.
@@ -79,4 +81,4 @@ The project has local Git commits on the `main` branch. Check `git status --shor
 
 ## Next step
 
-Continue payment wording coverage one case at a time. First verify the invoice-date and "no later than" browser results, then choose the next real wording example and add a focused regression test.
+Confirm `mvn test` and browser behavior for the partial-coverage example, then record the verified evaluation result. After that, assess payment wording against more varied examples before claiming broader coverage. The planned React UI, animated 3D landing page, OCR, database, and deployment remain future phases.

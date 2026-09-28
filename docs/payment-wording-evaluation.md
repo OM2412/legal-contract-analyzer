@@ -51,4 +51,6 @@ The coverage scanner checks only specific Client-to-Provider project-fee wording
 
 ## Results
 
-Not recorded yet. Add the date, Git commit, number of cases checked, failures, and examples of any incorrect matches after running this evaluation.
+| Date | Code revision | Check | Result |
+| --- | --- | --- | --- |
+| 2026-09-28 | `cd4e26f` | `mvn test` | Exit code 0. The automated checks cover 10 single-clause fixtures, 2 ambiguous fixtures, 1 negative fixture, and 1 partial-coverage fixture. |
