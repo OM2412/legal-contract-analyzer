@@ -128,6 +128,12 @@ public final class PaymentTermExtractor {
         Matcher matcher = pattern.matcher(document.text());
 
         while (matcher.find()) {
+            if (isExplicitlyNonOperativeExample(
+                    document.text(), matcher.start(), matcher.end()
+            )) {
+                continue;
+            }
+
             final int days;
 
             try {
@@ -203,6 +209,49 @@ public final class PaymentTermExtractor {
                     evidence
             ));
         }
+    }
+
+    private static boolean isExplicitlyNonOperativeExample(
+            String text, int start, int end
+    ) {
+        if (start == 0 || end >= text.length()) {
+            return false;
+        }
+
+        char opening = text.charAt(start - 1);
+        char closing = text.charAt(end);
+
+        boolean enclosedInQuotes =
+                (opening == '"' && closing == '"')
+                        || (opening == '\u201C' && closing == '\u201D');
+
+        if (!enclosedInQuotes) {
+            return false;
+        }
+
+        int contextStart = Math.max(
+                Math.max(0, start - 240),
+                Math.max(
+                        text.lastIndexOf('.', start - 2),
+                        text.lastIndexOf('\n', start - 1)
+                ) + 1
+        );
+
+        String context = text.substring(contextStart, start)
+                .toLowerCase(Locale.ROOT);
+
+        boolean describedAsExample =
+                context.contains("example")
+                        || context.contains("illustrative")
+                        || context.contains("sample");
+
+        boolean explicitlyNonOperative =
+                context.contains("no payment obligation")
+                        || context.contains("not binding")
+                        || context.contains("non-binding")
+                        || context.contains("does not create an obligation");
+
+        return describedAsExample && explicitlyNonOperative;
     }
 
     public static Optional<PaymentTerm> extract(SourceDocument document) {
