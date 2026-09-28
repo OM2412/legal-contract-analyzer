@@ -1,0 +1,1 @@
+Provider may charge a late fee if Client pays an invoice more than 30 calendar days after receipt. This clause does not set the invoice payment deadline.
