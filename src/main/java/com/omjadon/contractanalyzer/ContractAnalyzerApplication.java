@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -92,6 +93,7 @@ public final class ContractAnalyzerApplication {
                 "Agreement",
                 agreement,
                 agreementPdf,
+                review.agreementMatches(),
                 review.agreementTerm(),
                 review.agreementAssessment()
         );
@@ -100,6 +102,7 @@ public final class ContractAnalyzerApplication {
                 "SOW",
                 sow,
                 sowPdf,
+                review.sowMatches(),
                 review.sowTerm(),
                 review.sowAssessment()
         );
@@ -143,7 +146,9 @@ public final class ContractAnalyzerApplication {
 
     private static SourceDocument loadDocument(Path path, String documentId)
             throws IOException {
-        String fileName = path.getFileName().toString().toLowerCase(Locale.ROOT);
+        String fileName = path.getFileName()
+                .toString()
+                .toLowerCase(Locale.ROOT);
         SourceDocument loaded;
 
         if (fileName.endsWith(".pdf")) {
@@ -184,9 +189,38 @@ public final class ContractAnalyzerApplication {
             String label,
             SourceDocument document,
             boolean pdf,
+            List<PaymentTerm> matches,
             Optional<PaymentTerm> term,
             Optional<PaymentPolicyEvaluator.Assessment> assessment
     ) {
+        if (matches.size() > 1) {
+            System.out.println(
+                    label + ": " + matches.size()
+                            + " payment clauses recognized; "
+                            + "review each obligation"
+            );
+
+            for (int index = 0; index < matches.size(); index++) {
+                PaymentTerm match = matches.get(index);
+                String matchLabel = label + " match " + (index + 1);
+
+                System.out.println(
+                        matchLabel + ": "
+                                + match.days() + " " + match.dayUnit()
+                                + ", trigger=" + match.trigger()
+                                + ", payer=" + match.payer()
+                                + ", payee=" + match.payee()
+                                + ", scope=" + match.scope()
+                );
+
+                printEvidence(
+                        matchLabel, document, pdf, match.evidence()
+                );
+            }
+
+            return;
+        }
+
         if (term.isEmpty()) {
             System.out.println(label + ": payment clause not recognized");
             return;

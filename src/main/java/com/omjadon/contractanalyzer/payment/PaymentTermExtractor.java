@@ -75,6 +75,27 @@ public final class PaymentTermExtractor {
                     Pattern.CASE_INSENSITIVE
             );
 
+    private static final Pattern INSTALLMENT_CLAUSE =
+            Pattern.compile(
+                    "\\b(?<payer>Client|Customer)"
+                            + "\\s+(?:shall|must)\\s+pay"
+                            + "\\s+(?:the\\s+)?(?<payee>Provider|Vendor)"
+                            + "\\s+(?:the\\s+remaining\\s+)?"
+                            + "(?<percent>100|[1-9]\\d?)%"
+                            + "\\s+of\\s+the"
+                            + "\\s+(?<fee>project|implementation)"
+                            + "\\s+fee"
+                            + "\\s+(?:within|no\\s+later\\s+than)"
+                            + "\\s+(?<days>\\d+)\\s+"
+                            + "(?:(?<unit>calendar|business)\\s+)?days"
+                            + "\\s+after\\s+(?:"
+                            + "(?<acceptance>final\\s+acceptance"
+                            + "\\s+of\\s+the\\s+deliverables)"
+                            + "|signing\\s+this\\s+Agreement"
+                            + ")\\.",
+                    Pattern.CASE_INSENSITIVE
+            );
+
     private PaymentTermExtractor() {
     }
 
@@ -83,10 +104,11 @@ public final class PaymentTermExtractor {
 
         List<PaymentTerm> terms = new ArrayList<>();
 
-        addMatches(document, PAYMENT_CLAUSE, false, false, terms);
-        addMatches(document, LINKED_INVOICE_CLAUSE, true, true, terms);
-        addMatches(document, DUE_AND_PAYABLE_CLAUSE, true, true, terms);
-        addMatches(document, PASSIVE_PAYMENT_CLAUSE, true, false, terms);
+        addMatches(document, PAYMENT_CLAUSE, false, false, false, terms);
+        addMatches(document, LINKED_INVOICE_CLAUSE, true, true, false, terms);
+        addMatches(document, DUE_AND_PAYABLE_CLAUSE, true, true, false, terms);
+        addMatches(document, PASSIVE_PAYMENT_CLAUSE, true, false, false, terms);
+        addMatches(document, INSTALLMENT_CLAUSE, false, false, true, terms);
 
         terms.sort(Comparator.comparingInt(
                 term -> term.evidence().start()
@@ -100,6 +122,7 @@ public final class PaymentTermExtractor {
             Pattern pattern,
             boolean fixedInvoiceReceipt,
             boolean fixedPartiesAndScope,
+            boolean installment,
             List<PaymentTerm> terms
     ) {
         Matcher matcher = pattern.matcher(document.text());
@@ -129,7 +152,11 @@ public final class PaymentTermExtractor {
 
             PaymentTerm.PaymentTrigger trigger;
 
-            if (fixedInvoiceReceipt) {
+            if (installment) {
+                trigger = matcher.group("acceptance") != null
+                        ? PaymentTerm.PaymentTrigger.FINAL_ACCEPTANCE
+                        : PaymentTerm.PaymentTrigger.OTHER;
+            } else if (fixedInvoiceReceipt) {
                 trigger = PaymentTerm.PaymentTrigger.INVOICE_RECEIPT;
             } else if (matcher.group("acceptance") != null) {
                 trigger = PaymentTerm.PaymentTrigger.FINAL_ACCEPTANCE;
@@ -143,6 +170,11 @@ public final class PaymentTermExtractor {
                     ? "project_fee"
                     : matcher.group("fee")
                             .toLowerCase(Locale.ROOT) + "_fee";
+
+            if (installment) {
+                scope += "_" + matcher.group("percent") + "_percent";
+            }
+
             String payer = fixedPartiesAndScope
                     ? "Client"
                     : matcher.group("payer");
