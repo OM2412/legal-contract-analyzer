@@ -1,0 +1,2 @@
+Customer shall pay Vendor the implementation fee within 20 calendar days after receiving a valid invoice.
+Customer shall pay Vendor the implementation fee within forty-five (45) calendar days after receiving a valid invoice.

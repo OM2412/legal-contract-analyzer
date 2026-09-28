@@ -13,8 +13,10 @@ import java.util.regex.Pattern;
 public final class PaymentClauseCoverageScanner {
 
     private static final Pattern PAYMENT_START = Pattern.compile(
-            "\\b(?:Client\\s+(?:shall|must)\\s+pay\\s+"
-                    + "(?:the\\s+)?Provider\\s+the\\s+project\\s+fee"
+            "\\b(?:(?:Client|Customer)"
+                    + "\\s+(?:shall|must)\\s+pay\\s+"
+                    + "(?:the\\s+)?(?:Provider|Vendor)"
+                    + "\\s+the\\s+(?:project|implementation)\\s+fee"
                     + "|The\\s+project\\s+fee\\s+is\\s+due\\s+and"
                     + "\\s+payable\\s+by\\s+Client\\s+to\\s+Provider)\\b",
             Pattern.CASE_INSENSITIVE
