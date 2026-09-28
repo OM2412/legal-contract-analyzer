@@ -21,6 +21,7 @@ public final class PaymentTermExtractor {
                     + "\\s+(?:the\\s+)?(?<payee>Provider|Vendor)"
                     + "\\s+the\\s+(?<fee>project|implementation)"
                     + "\\s+fee"
+                    + "(?:\\s+by\\s+electronic\\s+bank\\s+transfer)?"
                     + "\\s+(?:within|no\\s+later\\s+than)"
                     + "\\s+(?<days>\\d+)\\s+"
                     + "(?:(?<unit>calendar|business)\\s+)?days"

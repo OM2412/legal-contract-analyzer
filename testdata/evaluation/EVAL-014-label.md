@@ -29,3 +29,10 @@ The payment method does not change the 30-calendar-day deadline. There is one ob
 - False positives: zero. Field errors: not applicable because no term was extracted.
 - The unparsed payment wording triggered manual review; no Agreement policy assessment was issued.
 - The SOW assessment belongs to the separate comparison fixture.
+## After the extractor change
+
+- The Agreement has one extracted term: Client pays Provider the project fee within 30 calendar days after invoice receipt.
+- Evidence covers the entire source sentence, including `by electronic bank transfer`.
+- Agreement policy assessment under `P-DEMO-30`: `WITHIN_POLICY`.
+- The SOW fixture states 60 calendar days, so the comparison is `POTENTIAL_DIFFERENCE`. With no supported priority wording, overall status is `REVIEW_REQUIRED`.
+- This post-fix result must not replace the baseline miss when reporting evaluation performance.
