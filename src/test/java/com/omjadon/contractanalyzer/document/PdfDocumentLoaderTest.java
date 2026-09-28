@@ -62,6 +62,6 @@ class PdfDocumentLoaderTest {
         IOException error = assertThrows(IOException.class,
                 () -> loader.load(file, "blank", "1"));
 
-        assertTrue(error.getMessage().contains("No readable text"));
+       assertTrue(error.getMessage().contains("OCR found no readable text"));
     }
 }
