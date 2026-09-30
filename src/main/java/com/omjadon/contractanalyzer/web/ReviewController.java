@@ -192,6 +192,22 @@ public class ReviewController {
                         ))
                         .orElse(null)
         );
+                response.put(
+                "agreementTerm",
+                result.agreementTerm()
+                        .map(term -> termDetails(
+                                agreement, term, agreementPdf
+                        ))
+                        .orElse(null)
+        );
+        response.put(
+                "sowTerm",
+                result.sowTerm()
+                        .map(term -> termDetails(
+                                sow, term, sowPdf
+                        ))
+                        .orElse(null)
+        );
 
         response.put(
                 "agreementMatches",
@@ -421,6 +437,24 @@ public class ReviewController {
             details.put("textSource", "TXT");
         }
 
+        return details;
+    }
+        private static Map<String, Object> termDetails(
+            SourceDocument document,
+            PaymentTerm term,
+            boolean pdf
+    ) {
+        Map<String, Object> details = new LinkedHashMap<>();
+        details.put("days", term.days());
+        details.put("dayUnit", term.dayUnit().name());
+        details.put("trigger", term.trigger().name());
+        details.put("scope", term.scope());
+        details.put("payer", term.payer());
+        details.put("payee", term.payee());
+        details.put(
+                "evidence",
+                evidence(document, term.evidence(), pdf)
+        );
         return details;
     }
 
