@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import EvidenceLens from './EvidenceLens'
+
 function readable(value) {
   return value ? value.replaceAll('_', ' ') : 'Not assessed'
 }
@@ -24,12 +27,25 @@ function evidenceLocation(item) {
   ].filter(Boolean).join(' | ')
 }
 
-function EvidenceItem({ item }) {
+function EvidenceItem({ item, file, onInspect }) {
   return (
     <div className="result-evidence-item">
       <blockquote>{item.quote}</blockquote>
-      <div className="result-location">
-        {evidenceLocation(item)}
+
+      <div className="result-evidence-bottom">
+        <span className="result-location">
+          {evidenceLocation(item)}
+        </span>
+
+        {file && (
+          <button
+            type="button"
+            className="result-evidence-open"
+            onClick={() => onInspect(file, item)}
+          >
+            View original
+          </button>
+        )}
       </div>
     </div>
   )
@@ -125,12 +141,13 @@ function DurationChart({ data }) {
 
 function DocumentResult({
   title,
-  fileName,
+  file,
   assessment,
   explanation,
   evidence,
   matches,
   unrecognized,
+  onInspect,
 }) {
   const recognized = matches?.length
     ? matches
@@ -143,7 +160,7 @@ function DocumentResult({
       <div className="result-document-heading">
         <div>
           <span className="eyebrow">{title}</span>
-          <h3>{fileName || title}</h3>
+          <h3>{file?.name || title}</h3>
         </div>
         <span className="result-assessment">
           {readable(assessment)}
@@ -172,7 +189,11 @@ function DocumentResult({
               Recognized clause {index + 1}
             </strong>
           )}
-          <EvidenceItem item={item} />
+          <EvidenceItem
+            item={item}
+            file={file}
+            onInspect={onInspect}
+          />
         </div>
       ))}
 
@@ -183,10 +204,13 @@ function DocumentResult({
             These passages may concern payment, but their terms
             were not fully parsed.
           </p>
+
           {unrecognized.map((item) => (
             <EvidenceItem
               key={`${item.documentId}-${item.start}-${item.end}`}
               item={item}
+              file={file}
+              onInspect={onInspect}
             />
           ))}
         </div>
@@ -196,124 +220,158 @@ function DocumentResult({
 }
 
 function ReviewResult({ data, files }) {
+  const [selectedEvidence, setSelectedEvidence] = useState(null)
+
   if (!data) return null
 
+  function inspect(file, item) {
+    setSelectedEvidence({ file, item })
+  }
+
+  function fileForEvidence(item) {
+    if (item.documentId === 'agreement-upload') {
+      return files?.agreement
+    }
+
+    if (item.documentId === 'sow-upload') {
+      return files?.sow
+    }
+
+    return null
+  }
+
   return (
-    <section
-      className="review-result-section section-spacing"
-      id="review-result"
-      aria-labelledby="result-heading"
-      tabIndex="-1"
-    >
-      <div className="page-container">
-        <div className="result-topline">
-          <span className="eyebrow">YOUR DOCUMENT REVIEW</span>
-          <button
-            type="button"
-            className="result-print"
-            onClick={() => window.print()}
-          >
-            Print / Save as PDF
-          </button>
-        </div>
-
-        <h2 id="result-heading">
-          {readable(data.reviewStatus)}
-        </h2>
-
-        <p className="result-intro">
-          Read each quote against the original document before
-          relying on a result.
-        </p>
-
-        {data.reviewReason && (
-          <div className="result-alert" role="status">
-            <strong>Why this needs attention</strong>
-            <p>{data.reviewReason}</p>
-          </div>
-        )}
-
-        <div className="result-summary">
-          <div>
-            <span>TERM COMPARISON</span>
-            <strong>{readable(data.comparisonStatus)}</strong>
-            {data.comparisonExplanation && (
-              <p>{data.comparisonExplanation}</p>
-            )}
+    <>
+      <section
+        className="review-result-section section-spacing"
+        id="review-result"
+        aria-labelledby="result-heading"
+        tabIndex="-1"
+      >
+        <div className="page-container">
+          <div className="result-topline">
+            <span className="eyebrow">YOUR DOCUMENT REVIEW</span>
+            <button
+              type="button"
+              className="result-print"
+              onClick={() => window.print()}
+            >
+              Print / Save as PDF
+            </button>
           </div>
 
-          <div>
-            <span>PAYMENT PRIORITY SCAN</span>
-            <strong>{readable(data.precedenceStatus)}</strong>
-          </div>
+          <h2 id="result-heading">
+            {readable(data.reviewStatus)}
+          </h2>
 
-          <div>
-            <span>DEMO POLICY LIMIT</span>
-            <strong>
-              {data.policyMaxDays ?? 30} calendar days
-            </strong>
-          </div>
-        </div>
+          <p className="result-intro">
+            Read each quote against the original document before
+            relying on a result.
+          </p>
 
-        <DurationChart data={data} />
-
-        <div className="result-documents">
-          <DocumentResult
-            title="AGREEMENT"
-            fileName={files?.agreement?.name}
-            assessment={data.agreementAssessment}
-            explanation={data.agreementExplanation}
-            evidence={data.agreementEvidence}
-            matches={data.agreementMatches}
-            unrecognized={data.agreementUnrecognized}
-          />
-
-          <DocumentResult
-            title="STATEMENT OF WORK"
-            fileName={files?.sow?.name}
-            assessment={data.sowAssessment}
-            explanation={data.sowExplanation}
-            evidence={data.sowEvidence}
-            matches={data.sowMatches}
-            unrecognized={data.sowUnrecognized}
-          />
-        </div>
-
-        <article className="result-precedence">
-          <span className="eyebrow">
-            PAYMENT PRIORITY WORDING
-          </span>
-          {data.precedenceEvidence?.length ? (
-            data.precedenceEvidence.map((item) => (
-              <EvidenceItem
-                key={`${item.documentId}-${item.start}-${item.end}`}
-                item={item}
-              />
-            ))
-          ) : (
-            <p>
-              No supported payment-priority wording located.
-            </p>
+          {data.reviewReason && (
+            <div className="result-alert" role="status">
+              <strong>Why this needs attention</strong>
+              <p>{data.reviewReason}</p>
+            </div>
           )}
-        </article>
 
-        {data.textualCandidateAssessment && (
-          <div className="result-candidate">
-            <strong>
-              Textual candidate assessment:{' '}
-              {readable(data.textualCandidateAssessment)}
-            </strong>
-            {data.textualCandidateExplanation && (
-              <p>{data.textualCandidateExplanation}</p>
-            )}
+          <div className="result-summary">
+            <div>
+              <span>TERM COMPARISON</span>
+              <strong>{readable(data.comparisonStatus)}</strong>
+              {data.comparisonExplanation && (
+                <p>{data.comparisonExplanation}</p>
+              )}
+            </div>
+
+            <div>
+              <span>PAYMENT PRIORITY SCAN</span>
+              <strong>{readable(data.precedenceStatus)}</strong>
+            </div>
+
+            <div>
+              <span>DEMO POLICY LIMIT</span>
+              <strong>
+                {data.policyMaxDays ?? 30} calendar days
+              </strong>
+            </div>
           </div>
-        )}
 
-        <p className="result-notice">
-          {data.notice}
-        </p>
-      </div>
-    </section>
+          <DurationChart data={data} />
+
+          <div className="result-documents">
+            <DocumentResult
+              title="AGREEMENT"
+              file={files?.agreement}
+              assessment={data.agreementAssessment}
+              explanation={data.agreementExplanation}
+              evidence={data.agreementEvidence}
+              matches={data.agreementMatches}
+              unrecognized={data.agreementUnrecognized}
+              onInspect={inspect}
+            />
+
+            <DocumentResult
+              title="STATEMENT OF WORK"
+              file={files?.sow}
+              assessment={data.sowAssessment}
+              explanation={data.sowExplanation}
+              evidence={data.sowEvidence}
+              matches={data.sowMatches}
+              unrecognized={data.sowUnrecognized}
+              onInspect={inspect}
+            />
+          </div>
+
+          <article className="result-precedence">
+            <span className="eyebrow">
+              PAYMENT PRIORITY WORDING
+            </span>
+
+            {data.precedenceEvidence?.length ? (
+              data.precedenceEvidence.map((item) => (
+                <EvidenceItem
+                  key={`${item.documentId}-${item.start}-${item.end}`}
+                  item={item}
+                  file={fileForEvidence(item)}
+                  onInspect={inspect}
+                />
+              ))
+            ) : (
+              <p>
+                No supported payment-priority wording located.
+              </p>
+            )}
+          </article>
+
+          {data.textualCandidateAssessment && (
+            <div className="result-candidate">
+              <strong>
+                Textual candidate assessment:{' '}
+                {readable(data.textualCandidateAssessment)}
+              </strong>
+
+              {data.textualCandidateExplanation && (
+                <p>{data.textualCandidateExplanation}</p>
+              )}
+            </div>
+          )}
+
+          <p className="result-notice">
+            {data.notice}
+          </p>
+        </div>
+      </section>
+
+      {selectedEvidence && (
+        <EvidenceLens
+          file={selectedEvidence.file}
+          evidence={selectedEvidence.item}
+          onClose={() => setSelectedEvidence(null)}
+        />
+      )}
+    </>
   )
 }
 
