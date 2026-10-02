@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import EvidenceLens from './EvidenceLens'
-
+import ReviewChecklist from './ReviewChecklist'
 function readable(value) {
   return value ? value.replaceAll('_', ' ') : 'Not assessed'
 }
@@ -218,8 +218,12 @@ function DocumentResult({
     </article>
   )
 }
-
-function ReviewResult({ data, files }) {
+function ReviewResult({
+  data,
+  files,
+  checklist,
+  onChecklistChange,
+}) {
   const [selectedEvidence, setSelectedEvidence] = useState(null)
 
   if (!data) return null
@@ -258,6 +262,11 @@ function ReviewResult({ data, files }) {
             >
               Print / Save as PDF
             </button>
+            <ReviewChecklist
+  data={data}
+  checklist={checklist}
+  onChange={onChecklistChange}
+/>
           </div>
 
           <h2 id="result-heading">

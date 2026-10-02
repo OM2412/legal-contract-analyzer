@@ -2385,3 +2385,184 @@
     animation: none;
   }
 }
+/* Human source verification */
+.review-checklist {
+  margin-top: 48px;
+  padding: clamp(24px, 4vw, 44px);
+  border: 1px solid #cbd4ca;
+  border-radius: 28px;
+  background: #f2f5ed;
+  color: #17251f;
+}
+
+.review-checklist-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.review-checklist h3 {
+  margin: 12px 0 18px;
+  color: #17251f;
+  font-size: clamp(1.7rem, 3vw, 2.6rem);
+  line-height: 1.1;
+}
+
+.review-checklist > p {
+  max-width: 75ch;
+  line-height: 1.6;
+}
+
+.review-checklist-count {
+  flex: none;
+  padding: 10px 14px;
+  border: 1px solid #9caf90;
+  border-radius: 999px;
+  color: #31532b;
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+
+.review-checklist-items {
+  display: grid;
+  gap: 12px;
+  margin: 26px 0 32px;
+}
+
+.review-checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid #d4ded0;
+  border-radius: 16px;
+  background: #fff;
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.review-checklist-item:hover {
+  transform: translateY(-2px);
+  border-color: #77986b;
+  box-shadow: 0 8px 24px rgba(37, 66, 40, 0.08);
+}
+
+.review-checklist-item:focus-within {
+  outline: 2px solid #527d3e;
+  outline-offset: 2px;
+}
+
+.review-checklist-item input {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  margin: 2px 0 0;
+  accent-color: #416c31;
+  cursor: pointer;
+}
+
+.review-checklist-item strong,
+.review-checklist-item small {
+  display: block;
+}
+
+.review-checklist-item strong {
+  margin-bottom: 7px;
+  color: #17251f;
+}
+
+.review-checklist-item small {
+  color: #506158;
+  font-size: 0.87rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.review-checklist-notes-label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 750;
+}
+
+.review-checklist-notes {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 145px;
+  padding: 17px;
+  resize: vertical;
+  border: 1px solid #aebfb0;
+  border-radius: 14px;
+  background: #fff;
+  color: #17251f;
+  font: inherit;
+  line-height: 1.5;
+}
+
+.review-checklist-notes:focus-visible {
+  outline: 2px solid #527d3e;
+  outline-offset: 2px;
+}
+
+.review-checklist .review-checklist-footnote {
+  margin: 16px 0 0;
+  color: #57665d;
+  font-size: 0.86rem;
+}
+
+@media (max-width: 700px) {
+  .review-checklist-heading {
+    flex-direction: column;
+  }
+
+  .review-checklist-count {
+    align-self: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .review-checklist-item {
+    transition: none;
+  }
+
+  .review-checklist-item:hover {
+    transform: none;
+  }
+}
+.review-checklist-notes-print {
+  display: none;
+}
+
+@media print {
+  .review-checklist {
+    margin-top: 24px;
+    padding: 18px;
+    border: 1px solid #777;
+    border-radius: 0;
+    background: #fff;
+    color: #111;
+    break-inside: auto;
+  }
+
+  .review-checklist-item {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+
+  .review-checklist-notes {
+    display: none;
+  }
+
+  .review-checklist-notes-print {
+    display: block;
+    min-height: 48px;
+    padding: 12px;
+    border: 1px solid #777;
+    color: #111;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}

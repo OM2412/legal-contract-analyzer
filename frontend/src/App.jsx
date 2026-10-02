@@ -155,6 +155,10 @@ function App() {
     progress: '',
     error: '',
   })
+  const [reviewChecklist, setReviewChecklist] = useState({
+    verified: {},
+    notes: '',
+  })
   const [view, setView] = useState(() =>
     window.location.hash === '#ai-studio' ? 'ai-studio' : 'site'
   )
@@ -173,6 +177,10 @@ function App() {
   function handleReview(data, files) {
     setReview(data)
     setReviewedFiles(files)
+    setReviewChecklist({
+      verified: {},
+      notes: '',
+    })
     setAiSession({
       agreementData: null,
       sowData: null,
@@ -407,7 +415,12 @@ function App() {
         </section>
 
         <ReviewWorkspace onReview={handleReview} />
-        <ReviewResult data={review} files={reviewedFiles} />
+        <ReviewResult
+          data={review}
+          files={reviewedFiles}
+          checklist={reviewChecklist}
+          onChecklistChange={setReviewChecklist}
+        />
 
         {review && reviewedFiles && (
           <section className="ai-studio-entry section-spacing">
