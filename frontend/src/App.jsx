@@ -2,9 +2,12 @@ import { useEffect, useState } from 'react'
 import ReviewWorkspace from './ReviewWorkspace'
 import ReviewResult from './ReviewResult'
 import AiStudio from './AiStudio'
+import AuthPage from './AuthPage'
+import SavedReviews from './SavedReviews'
+import { apiFetch } from './apiClient'
 import './App.css'
+import './SavedReviews.css'
 const AI_ENABLED = import.meta.env.VITE_AI_ENABLED !== 'false'
-
 const sample = {
   agreement: {
     label: 'Agreement',
@@ -23,12 +26,10 @@ const sample = {
     assessment: 'Outside demo policy',
   },
 }
-
 function DocumentScene() {
   return (
     <div className="document-scene" aria-hidden="true">
       <div className="scene-grid" />
-
       <div className="scene-sheet scene-sheet-agreement">
         <div className="scene-sheet-top">
           <span>01 / AGREEMENT</span>
@@ -45,11 +46,9 @@ function DocumentScene() {
         <div className="scene-sheet-line scene-sheet-line-long" />
         <div className="scene-sheet-line scene-sheet-line-short" />
       </div>
-
       <div className="scene-connector">
         <span>COMPARE</span>
       </div>
-
       <div className="scene-sheet scene-sheet-sow">
         <div className="scene-sheet-top">
           <span>02 / SOW</span>
@@ -67,7 +66,6 @@ function DocumentScene() {
         <div className="scene-sheet-line" />
         <div className="scene-sheet-line scene-sheet-line-short" />
       </div>
-
       <div className="scene-result">
         <span className="scene-result-dot" />
         Difference found
@@ -75,11 +73,9 @@ function DocumentScene() {
     </div>
   )
 }
-
 function SampleReview() {
   const [activeDocument, setActiveDocument] = useState('agreement')
   const selected = sample[activeDocument]
-
   return (
     <div className="sample-board">
       <div className="sample-board-top">
@@ -89,7 +85,6 @@ function SampleReview() {
         </div>
         <span className="sample-status">Potential difference</span>
       </div>
-
       <div className="sample-comparison">
         <div className="sample-term">
           <span>AGREEMENT</span>
@@ -103,14 +98,12 @@ function SampleReview() {
           <small>calendar days</small>
         </div>
       </div>
-
       <div className="sample-evidence">
         <div className="sample-evidence-heading">
           <div>
             <span className="eyebrow">FOLLOW THE EVIDENCE</span>
             <h4>Read the source, not just the result.</h4>
           </div>
-
           <div className="sample-switch" aria-label="Choose sample document">
             <button
               type="button"
@@ -128,17 +121,14 @@ function SampleReview() {
             </button>
           </div>
         </div>
-
         <blockquote key={activeDocument}>
           “{selected.quote}”
         </blockquote>
-
         <div className="sample-evidence-footer">
           <span>{selected.label} · {selected.location}</span>
           <span>{selected.assessment}</span>
         </div>
       </div>
-
       <p className="sample-disclaimer">
         This is synthetic sample data. P-DEMO-30 is an illustrative business
         preference; review the complete original documents before a decision.
@@ -146,7 +136,12 @@ function SampleReview() {
     </div>
   )
 }
-
+function viewFromHash() {
+  if (window.location.hash === '#sign-in') return 'auth'
+  if (window.location.hash === '#my-reviews') return 'archive'
+  if (AI_ENABLED && window.location.hash === '#ai-studio') return 'ai-studio'
+  return 'site'
+}
 function App() {
   const [review, setReview] = useState(null)
   const [reviewedFiles, setReviewedFiles] = useState(null)
@@ -160,25 +155,44 @@ function App() {
     verified: {},
     notes: '',
   })
- const [view, setView] = useState(() =>
-  AI_ENABLED && window.location.hash === '#ai-studio'
-    ? 'ai-studio'
-    : 'site'
-)
-
+  const [view, setView] = useState(viewFromHash)
+  const [accountStatus, setAccountStatus] = useState('checking')
+  useEffect(() => {
+    let active = true
+    apiFetch('/api/auth/me')
+      .then((response) => {
+        if (active) {
+          setAccountStatus(response.ok ? 'signed-in' : 'signed-out')
+        }
+      })
+      .catch(() => {
+        if (active) setAccountStatus('signed-out')
+      })
+    return () => {
+      active = false
+    }
+  }, [])
   useEffect(() => {
     function syncView() {
-     setView(
-  AI_ENABLED && window.location.hash === '#ai-studio'
-    ? 'ai-studio'
-    : 'site'
-)
+      setView(viewFromHash())
     }
-
     window.addEventListener('hashchange', syncView)
     return () => window.removeEventListener('hashchange', syncView)
   }, [])
-
+  function handleAuthenticated() {
+    setAccountStatus('signed-in')
+    const returningToArchive = window.location.hash === '#my-reviews'
+    if (returningToArchive) {
+      setView('archive')
+      window.scrollTo(0, 0)
+      return
+    }
+    window.location.hash = 'workspace'
+    setView('site')
+    window.requestAnimationFrame(() => {
+      document.getElementById('workspace')?.scrollIntoView({ block: 'start' })
+    })
+  }
   function handleReview(data, files) {
     setReview(data)
     setReviewedFiles(files)
@@ -192,7 +206,6 @@ function App() {
       progress: '',
       error: '',
     })
-
     window.requestAnimationFrame(() => {
       const section = document.getElementById('review-result')
       section?.scrollIntoView({
@@ -202,19 +215,15 @@ function App() {
       section?.focus({ preventScroll: true })
     })
   }
-
   function openAiStudio() {
     window.location.hash = 'ai-studio'
     setView('ai-studio')
     window.scrollTo(0, 0)
   }
-
   function backToReview() {
     const target = review ? 'review-result' : 'workspace'
-
     window.location.hash = target
     setView('site')
-
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
         document.getElementById(target)?.scrollIntoView({
@@ -223,7 +232,23 @@ function App() {
       })
     })
   }
-
+  if (accountStatus === 'checking' && view !== 'site') {
+    return <main className="auth-page" aria-live="polite">Checking session…</main>
+  }
+  if (view === 'auth' || (
+    (view === 'ai-studio' || view === 'archive') &&
+    accountStatus !== 'signed-in'
+  )) {
+    return <AuthPage onAuthenticated={handleAuthenticated} />
+  }
+  if (view === 'archive') {
+    return (
+      <>
+        <a className="skip-link" href="#main">Skip to content</a>
+        <SavedReviews onBack={backToReview} />
+      </>
+    )
+  }
   if (view === 'ai-studio') {
     return (
       <>
@@ -239,13 +264,11 @@ function App() {
       </>
     )
   }
-
   return (
     <div className="site-shell">
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-
       <header className="site-header">
         <nav
           className="site-nav page-container"
@@ -260,19 +283,19 @@ function App() {
               folio<span className="brand-period">.</span>
             </span>
           </a>
-
           <div className="nav-links">
             <a href="#how-it-works">How it works</a>
             <a href="#sample">Sample review</a>
             <a href="#about">About</a>
+            {accountStatus === 'signed-in' && (
+              <a href="#my-reviews">My reviews</a>
+            )}
           </div>
-
           <a className="nav-action" href="#workspace">
             Open workspace <span aria-hidden="true">↗</span>
           </a>
         </nav>
       </header>
-
       <main id="main">
         <section className="hero-section" id="top">
           <div className="hero-inner page-container">
@@ -281,18 +304,15 @@ function App() {
                 <span className="live-indicator" />
                 CONTRACT INTELLIGENCE, WITH RECEIPTS
               </span>
-
               <h1>
                 Find the difference.
                 <em> Follow the evidence.</em>
               </h1>
-
               <p className="hero-description">
                 Compare payment terms across an Agreement and Statement of Work.
                 See what differs, why it matters for your review, and the exact
                 source text behind each finding.
               </p>
-
               <div className="hero-actions">
                 <a className="button button-lime" href="#workspace">
                   Review documents
@@ -302,23 +322,19 @@ function App() {
                   See how it works
                 </a>
               </div>
-
               <div className="hero-footnote">
                 PDF + TXT <span aria-hidden="true">/</span>
                 Local OCR support <span aria-hidden="true">/</span>
                 Human review required
               </div>
             </div>
-
             <DocumentScene />
           </div>
-
           <div className="hero-bottom page-container">
             <span>AGREEMENT ↔ SOW</span>
             <span>SCROLL TO EXPLORE ↓</span>
           </div>
         </section>
-
         <section
           className="intro-strip"
           aria-label="The review workflow"
@@ -329,7 +345,6 @@ function App() {
             <span>03 / VERIFY</span>
           </div>
         </section>
-
         <section
           className="process-section section-spacing"
           id="how-it-works"
@@ -343,7 +358,6 @@ function App() {
                 wording stays visible for a human reviewer.
               </p>
             </div>
-
             <div className="process-grid">
               <article className="process-card">
                 <span className="process-number">01</span>
@@ -361,7 +375,6 @@ function App() {
                 </p>
                 <span className="process-caption">DOCUMENT INTAKE</span>
               </article>
-
               <article className="process-card">
                 <span className="process-number">02</span>
                 <div
@@ -378,7 +391,6 @@ function App() {
                 </p>
                 <span className="process-caption">STRUCTURED COMPARISON</span>
               </article>
-
               <article className="process-card">
                 <span className="process-number">03</span>
                 <div
@@ -398,7 +410,6 @@ function App() {
             </div>
           </div>
         </section>
-
         <section className="sample-section section-spacing" id="sample">
           <div className="page-container">
             <div className="section-heading sample-section-heading">
@@ -414,19 +425,33 @@ function App() {
                 Switch documents to inspect each exact quote.
               </p>
             </div>
-
             <SampleReview />
           </div>
         </section>
-
-        <ReviewWorkspace onReview={handleReview} />
+        {accountStatus === 'signed-in' ? (
+          <ReviewWorkspace onReview={handleReview} />
+        ) : (
+          <section className="workspace-section section-spacing" id="workspace">
+            <div className="page-container">
+              <span className="eyebrow">YOUR WORKSPACE</span>
+              <h2>Ready to review your documents?</h2>
+              <p>Sign in to run a review and keep your findings together.</p>
+              {accountStatus === 'checking' ? (
+                <p role="status">Checking your session…</p>
+              ) : (
+                <a className="button button-lime" href="#sign-in">
+                  Sign in or create an account <span aria-hidden="true">↗</span>
+                </a>
+              )}
+            </div>
+          </section>
+        )}
         <ReviewResult
           data={review}
           files={reviewedFiles}
           checklist={reviewChecklist}
           onChecklistChange={setReviewChecklist}
         />
-
        {AI_ENABLED && review && reviewedFiles && (
           <section className="ai-studio-entry section-spacing">
             <div className="page-container ai-studio-entry-inner">
@@ -438,7 +463,6 @@ function App() {
                   suggestions. Your rule-based review stays available here.
                 </p>
               </div>
-
               <button
                 type="button"
                 className="ai-studio-entry-button"
@@ -449,14 +473,12 @@ function App() {
             </div>
           </section>
         )}
-
         <section className="about-section section-spacing" id="about">
           <div className="page-container about-layout">
             <div>
               <span className="eyebrow">BUILT WITH INTENTION</span>
               <h2>Contracts deserve<br />a closer read.</h2>
             </div>
-
             <div className="about-copy">
               <p>
                 Folio is an evidence-focused student project built at MITS
@@ -481,7 +503,6 @@ function App() {
           </div>
         </section>
       </main>
-
       <footer className="site-footer">
         <div className="page-container footer-inner">
           <span className="footer-brand">folio.</span>
@@ -492,5 +513,4 @@ function App() {
     </div>
   )
 }
-
 export default App

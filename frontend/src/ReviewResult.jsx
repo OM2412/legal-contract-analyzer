@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import EvidenceLens from './EvidenceLens'
 import ReviewChecklist from './ReviewChecklist'
+import SaveReviewButton from './SaveReviewButton'
 function readable(value) {
   return value ? value.replaceAll('_', ' ') : 'Not assessed'
 }
@@ -262,6 +263,12 @@ function ReviewResult({
             >
               Print / Save as PDF
             </button>
+            <SaveReviewButton
+  key={`${data.agreementVersion}-${data.sowVersion}-${data.policyMaxDays}`}
+  files={files}
+  maxDays={data.policyMaxDays ?? 30}
+  reviewStatus={data.reviewStatus}
+/>
             <ReviewChecklist
   data={data}
   checklist={checklist}
