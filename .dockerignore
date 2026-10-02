@@ -1,0 +1,17 @@
+.git
+.github
+.vscode
+.idea
+
+frontend/node_modules
+frontend/dist
+target
+
+.env
+.env.*
+frontend/.env
+frontend/.env.*
+
+*.log
+*.tmp
+.DS_Store
