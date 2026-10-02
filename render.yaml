@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: folio-contract-demo
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: FOLIO_DEMO_AUTH_ENABLED
+        value: "true"
+      - key: FOLIO_DEMO_USERNAME
+        value: mentor
+      - key: FOLIO_DEMO_PASSWORD
+        sync: false
+      - key: FOLIO_AI_ENABLED
+        value: "false"
