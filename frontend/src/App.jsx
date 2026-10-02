@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import ReviewWorkspace from './ReviewWorkspace'
 import ReviewResult from './ReviewResult'
+import AiStudio from './AiStudio'
 import './App.css'
 
 const sample = {
@@ -94,9 +95,7 @@ function SampleReview() {
           <strong>30</strong>
           <small>calendar days</small>
         </div>
-
         <div className="sample-versus" aria-hidden="true">↔</div>
-
         <div className="sample-term sample-term-sow">
           <span>STATEMENT OF WORK</span>
           <strong>60</strong>
@@ -150,16 +149,82 @@ function SampleReview() {
 function App() {
   const [review, setReview] = useState(null)
   const [reviewedFiles, setReviewedFiles] = useState(null)
+  const [aiSession, setAiSession] = useState({
+    agreementData: null,
+    sowData: null,
+    progress: '',
+    error: '',
+  })
+  const [view, setView] = useState(() =>
+    window.location.hash === '#ai-studio' ? 'ai-studio' : 'site'
+  )
+
+  useEffect(() => {
+    function syncView() {
+      setView(
+        window.location.hash === '#ai-studio' ? 'ai-studio' : 'site'
+      )
+    }
+
+    window.addEventListener('hashchange', syncView)
+    return () => window.removeEventListener('hashchange', syncView)
+  }, [])
 
   function handleReview(data, files) {
     setReview(data)
     setReviewedFiles(files)
+    setAiSession({
+      agreementData: null,
+      sowData: null,
+      progress: '',
+      error: '',
+    })
 
     window.requestAnimationFrame(() => {
       const section = document.getElementById('review-result')
-      section?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      section?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
       section?.focus({ preventScroll: true })
     })
+  }
+
+  function openAiStudio() {
+    window.location.hash = 'ai-studio'
+    setView('ai-studio')
+    window.scrollTo(0, 0)
+  }
+
+  function backToReview() {
+    const target = review ? 'review-result' : 'workspace'
+
+    window.location.hash = target
+    setView('site')
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        document.getElementById(target)?.scrollIntoView({
+          block: 'start',
+        })
+      })
+    })
+  }
+
+  if (view === 'ai-studio') {
+    return (
+      <>
+        <a className="skip-link" href="#main">
+          Skip to content
+        </a>
+        <AiStudio
+          files={reviewedFiles}
+          session={aiSession}
+          onSessionChange={setAiSession}
+          onBack={backToReview}
+        />
+      </>
+    )
   }
 
   return (
@@ -169,7 +234,10 @@ function App() {
       </a>
 
       <header className="site-header">
-        <nav className="site-nav page-container" aria-label="Main navigation">
+        <nav
+          className="site-nav page-container"
+          aria-label="Main navigation"
+        >
           <a className="brand" href="#top" aria-label="Folio home">
             <span className="brand-mark" aria-hidden="true">
               <span />
@@ -333,12 +401,36 @@ function App() {
                 Switch documents to inspect each exact quote.
               </p>
             </div>
+
             <SampleReview />
           </div>
         </section>
 
         <ReviewWorkspace onReview={handleReview} />
         <ReviewResult data={review} files={reviewedFiles} />
+
+        {review && reviewedFiles && (
+          <section className="ai-studio-entry section-spacing">
+            <div className="page-container ai-studio-entry-inner">
+              <div>
+                <span className="eyebrow">OPTIONAL / LOCAL AI</span>
+                <h2>Take a second look at the wording.</h2>
+                <p>
+                  Open a separate space for source-verified AI quote
+                  suggestions. Your rule-based review stays available here.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="ai-studio-entry-button"
+                onClick={openAiStudio}
+              >
+                Enter AI Studio
+              </button>
+            </div>
+          </section>
+        )}
 
         <section className="about-section section-spacing" id="about">
           <div className="page-container about-layout">
