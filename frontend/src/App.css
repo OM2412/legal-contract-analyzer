@@ -2239,3 +2239,149 @@
     display: none;
   }
 }
+/* Source-checked AI candidate comparison */
+.ai-comparison {
+  position: relative;
+  overflow: hidden;
+  margin-top: 36px;
+  padding: clamp(24px, 4vw, 42px);
+  border: 1px solid rgba(200, 243, 107, 0.28);
+  border-radius: 26px;
+  background:
+    radial-gradient(
+      circle at 90% 0%,
+      rgba(200, 243, 107, 0.13),
+      transparent 38%
+    ),
+    #12232c;
+  color: #f6f3ec;
+  animation: ai-comparison-enter 450ms ease both;
+}
+
+.ai-comparison .eyebrow {
+  color: #c8f36b;
+}
+
+.ai-comparison h3 {
+  margin: 12px 0 24px;
+  color: #f6f3ec;
+  font-size: clamp(1.55rem, 3vw, 2.5rem);
+  line-height: 1.12;
+}
+
+.ai-comparison > p {
+  max-width: 70ch;
+  line-height: 1.6;
+}
+
+.ai-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.ai-comparison-term {
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid rgba(246, 243, 236, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.ai-comparison-term > span {
+  display: block;
+  margin-bottom: 18px;
+  color: #acb9bc;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+
+.ai-comparison-term strong {
+  display: block;
+  color: #f6f3ec;
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  line-height: 1;
+}
+
+.ai-comparison-term small {
+  color: #c5d3d1;
+  font-size: clamp(0.85rem, 1.5vw, 1.1rem);
+  font-weight: 500;
+}
+
+.ai-comparison-track {
+  height: 10px;
+  overflow: hidden;
+  margin-top: 24px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.ai-comparison-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #c8f36b;
+  transform-origin: left center;
+  animation: ai-comparison-grow 750ms ease-out both;
+}
+
+.ai-comparison-term:nth-child(2) .ai-comparison-track > span {
+  background: #bd9af2;
+}
+
+.ai-comparison-observation {
+  margin: 24px 0 0;
+  color: #c8f36b;
+  font-size: 1.08rem;
+  font-weight: 700;
+}
+
+.ai-comparison-caution {
+  margin: 14px 0 0;
+  color: #f0ce91;
+}
+
+.ai-comparison-disclaimer {
+  margin: 20px 0 0;
+  color: #b4c0c0;
+  font-size: 0.9rem;
+}
+
+@keyframes ai-comparison-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ai-comparison-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (max-width: 700px) {
+  .ai-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-comparison-term {
+    padding: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-comparison,
+  .ai-comparison-track > span {
+    animation: none;
+  }
+}

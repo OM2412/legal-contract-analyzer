@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import AiComparison from './AiComparison'
 
 async function requestSuggestions(file, signal) {
   const form = new FormData()
@@ -238,6 +239,10 @@ function AiSuggestions({
           onInspect={onInspect}
         />
       </div>
+      <AiComparison
+  agreementData={agreementData}
+  sowData={sowData}
+/>
     </section>
   )
 }
