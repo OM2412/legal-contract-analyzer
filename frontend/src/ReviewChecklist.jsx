@@ -1,26 +1,54 @@
+function quoteItems(evidenceList, prefix, label) {
+  return evidenceList.map((evidence, index) => ({
+    id:
+      `${prefix}-${evidence.documentId}-` +
+      `${evidence.start}-${evidence.end}`,
+    label: `${label} ${index + 1}`,
+    quote: evidence.quote,
+  }))
+}
+
 function ReviewChecklist({ data, checklist, onChange }) {
   if (!data) return null
 
+  const agreementMatches = data.agreementMatches?.length
+    ? data.agreementMatches
+    : data.agreementEvidence
+      ? [data.agreementEvidence]
+      : []
+
+  const sowMatches = data.sowMatches?.length
+    ? data.sowMatches
+    : data.sowEvidence
+      ? [data.sowEvidence]
+      : []
+
   const items = [
-    ...(data.agreementEvidence
-      ? [{
-          id: 'agreement',
-          label: 'Agreement payment quote',
-          quote: data.agreementEvidence.quote,
-        }]
-      : []),
-    ...(data.sowEvidence
-      ? [{
-          id: 'sow',
-          label: 'SOW payment quote',
-          quote: data.sowEvidence.quote,
-        }]
-      : []),
-    ...(data.precedenceEvidence ?? []).map((evidence, index) => ({
-      id: `precedence-${index}`,
-      label: `Payment priority quote ${index + 1}`,
-      quote: evidence.quote,
-    })),
+    ...quoteItems(
+      agreementMatches,
+      'agreement-match',
+      'Agreement payment quote'
+    ),
+    ...quoteItems(
+      sowMatches,
+      'sow-match',
+      'SOW payment quote'
+    ),
+    ...quoteItems(
+      data.agreementUnrecognized ?? [],
+      'agreement-unparsed',
+      'Agreement additional wording'
+    ),
+    ...quoteItems(
+      data.sowUnrecognized ?? [],
+      'sow-unparsed',
+      'SOW additional wording'
+    ),
+    ...quoteItems(
+      data.precedenceEvidence ?? [],
+      'priority',
+      'Payment priority quote'
+    ),
   ]
 
   const verified = checklist.verified ?? {}
@@ -57,19 +85,20 @@ function ReviewChecklist({ data, checklist, onChange }) {
         </div>
 
         <span className="review-checklist-count">
-          {checkedCount}/{items.length} quotes checked
+          {checkedCount}/{items.length} passages checked
         </span>
       </div>
 
       <p>
-        Open the original Agreement and SOW. Mark a quote only after
+        Open the original Agreement and SOW. Mark a passage only after
         checking that it matches the source and is relevant in context.
-        Also read any additional wording flagged elsewhere in this report.
+        Read both complete documents, including wording the system may
+        have missed.
       </p>
 
       {items.length === 0 ? (
         <p className="review-checklist-empty">
-          No supported source quotes are available to check here.
+          No supported source passages are available to check here.
           Read both complete documents manually.
         </p>
       ) : (
@@ -109,12 +138,13 @@ function ReviewChecklist({ data, checklist, onChange }) {
         onChange={(event) => setNotes(event.target.value)}
         placeholder="Record questions, exceptions, or follow-up needed..."
       />
+
       <div
-  className="review-checklist-notes-print"
-  aria-hidden="true"
->
-  {checklist.notes?.trim() || 'No reviewer notes recorded.'}
-</div>
+        className="review-checklist-notes-print"
+        aria-hidden="true"
+      >
+        {checklist.notes?.trim() || 'No reviewer notes recorded.'}
+      </div>
 
       <p className="review-checklist-footnote">
         Checks and notes are kept only in this open browser session.
