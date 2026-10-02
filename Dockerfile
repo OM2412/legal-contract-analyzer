@@ -2,6 +2,8 @@
 FROM node:24-bookworm-slim AS frontend-build
 
 WORKDIR /frontend
+ARG VITE_AI_ENABLED=false
+ENV VITE_AI_ENABLED=${VITE_AI_ENABLED}
 
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
@@ -20,6 +22,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+ENV FOLIO_AI_ENABLED=false
 
 COPY pom.xml ./
 COPY src ./src
@@ -46,4 +49,4 @@ COPY --from=backend-build \
 
 USER 10001
 
-ENTRYPOINT ["sh", "-c", "exec java -jar /app/app.jar --server.address=0.0.0.0 --server.port=${PORT:-8080}"]
+ENTRYPOINT ["sh", "-c", "exec java -jar /app/app.jar --server.address=0.0.0.0 --server.port=${PORT:-8080} --folio.ai.enabled=${FOLIO_AI_ENABLED:-false}"]

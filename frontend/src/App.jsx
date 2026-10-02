@@ -3,6 +3,7 @@ import ReviewWorkspace from './ReviewWorkspace'
 import ReviewResult from './ReviewResult'
 import AiStudio from './AiStudio'
 import './App.css'
+const AI_ENABLED = import.meta.env.VITE_AI_ENABLED !== 'false'
 
 const sample = {
   agreement: {
@@ -159,15 +160,19 @@ function App() {
     verified: {},
     notes: '',
   })
-  const [view, setView] = useState(() =>
-    window.location.hash === '#ai-studio' ? 'ai-studio' : 'site'
-  )
+ const [view, setView] = useState(() =>
+  AI_ENABLED && window.location.hash === '#ai-studio'
+    ? 'ai-studio'
+    : 'site'
+)
 
   useEffect(() => {
     function syncView() {
-      setView(
-        window.location.hash === '#ai-studio' ? 'ai-studio' : 'site'
-      )
+     setView(
+  AI_ENABLED && window.location.hash === '#ai-studio'
+    ? 'ai-studio'
+    : 'site'
+)
     }
 
     window.addEventListener('hashchange', syncView)
@@ -422,7 +427,7 @@ function App() {
           onChecklistChange={setReviewChecklist}
         />
 
-        {review && reviewedFiles && (
+       {AI_ENABLED && review && reviewedFiles && (
           <section className="ai-studio-entry section-spacing">
             <div className="page-container ai-studio-entry-inner">
               <div>
