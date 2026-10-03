@@ -15,51 +15,117 @@ public final class LiabilitySignalFinder {
     private static final int MAX_CONTEXT_CHARS = 500;
     private static final int MAX_BACK_CONTEXT_CHARS = 160;
 
-    private static final List<Pattern> CUES = List.of(
-            // A possible ceiling; this does not identify its exceptions.
-            Pattern.compile(
-                    "\\b(?:aggregate\\s+|total\\s+)?liability\\b"
-                            + "[^.;\\f]{0,220}?"
-                            + "\\b(?:not\\s+exceed|limited\\s+to"
-                            + "|capped\\s+at)\\b",
-                    Pattern.CASE_INSENSITIVE
-            ),
+    private enum CueKind {
+        CAP(
+                "Possible liability limit wording",
+                "Check the amount, scope, exceptions, and "
+                        + "cross-references before interpreting "
+                        + "this limit.",
+                "LIABILITY_CAP_CUE_V1"
+        ),
+        EXCEPTION(
+                "Possible liability-limit exception",
+                "Check which obligation is excepted and whether "
+                        + "other limits still apply. This cue does "
+                        + "not establish uncapped liability.",
+                "LIABILITY_EXCEPTION_CUE_V1"
+        ),
+        EXCLUDED_LOSS(
+                "Possible excluded-loss wording",
+                "Check which losses are excluded, the parties "
+                        + "covered, and any exceptions.",
+                "LIABILITY_EXCLUDED_LOSS_CUE_V1"
+        );
 
-            // An exception to a limitation.
-            Pattern.compile(
-                    "\\b(?:shall|will|does)\\s+not\\s+"
-                            + "(?:limit|exclude)\\s+(?:the\\s+)?"
-                            + "liability\\b",
-                    Pattern.CASE_INSENSITIVE
-            ),
+        private final String title;
+        private final String explanation;
+        private final String ruleId;
 
-            // Exclusions of liability or recovery.
-            Pattern.compile(
-                    "\\b(?:shall|will)\\s+not\\s+be\\s+liable\\b",
-                    Pattern.CASE_INSENSITIVE
+        CueKind(
+                String title,
+                String explanation,
+                String ruleId
+        ) {
+            this.title = title;
+            this.explanation = explanation;
+            this.ruleId = ruleId;
+        }
+    }
+
+    private record Cue(Pattern pattern, CueKind kind) {
+    }
+
+    private record Range(
+            int start,
+            int end,
+            CueKind kind
+    ) {
+    }
+
+    private static final List<Cue> CUES = List.of(
+            new Cue(
+                    Pattern.compile(
+                            "\\b(?:aggregate\\s+|total\\s+)?"
+                                    + "liability\\b"
+                                    + "[^.;\\f]{0,220}?"
+                                    + "\\b(?:not\\s+exceed"
+                                    + "|limited\\s+to"
+                                    + "|capped\\s+at)\\b",
+                            Pattern.CASE_INSENSITIVE
+                    ),
+                    CueKind.CAP
             ),
-            Pattern.compile(
-                    "\\bneither\\s+party\\s+(?:shall|will)\\s+"
-                            + "be\\s+liable\\b",
-                    Pattern.CASE_INSENSITIVE
+            new Cue(
+                    Pattern.compile(
+                            "\\b(?:shall|will|does)\\s+not\\s+"
+                                    + "(?:limit|exclude)\\s+"
+                                    + "(?:the\\s+)?liability\\b",
+                            Pattern.CASE_INSENSITIVE
+                    ),
+                    CueKind.EXCEPTION
             ),
-            Pattern.compile(
-                    "\\b(?:is|are)\\s+not\\s+liable\\b",
-                    Pattern.CASE_INSENSITIVE
+            new Cue(
+                    Pattern.compile(
+                            "\\b(?:shall|will)\\s+not\\s+"
+                                    + "be\\s+liable\\b",
+                            Pattern.CASE_INSENSITIVE
+                    ),
+                    CueKind.EXCLUDED_LOSS
             ),
-            Pattern.compile(
-                    "\\bin\\s+no\\s+event\\b[^.;\\f]{0,180}?"
-                            + "\\b(?:liable|liability)\\b",
-                    Pattern.CASE_INSENSITIVE
+            new Cue(
+                    Pattern.compile(
+                            "\\bneither\\s+party\\s+"
+                                    + "(?:shall|will)\\s+"
+                                    + "be\\s+liable\\b",
+                            Pattern.CASE_INSENSITIVE
+                    ),
+                    CueKind.EXCLUDED_LOSS
             ),
-            Pattern.compile(
-                    "\\bwaives?\\s+any\\s+right\\s+to\\s+recover\\b",
-                    Pattern.CASE_INSENSITIVE
+            new Cue(
+                    Pattern.compile(
+                            "\\b(?:is|are)\\s+not\\s+liable\\b",
+                            Pattern.CASE_INSENSITIVE
+                    ),
+                    CueKind.EXCLUDED_LOSS
+            ),
+            new Cue(
+                    Pattern.compile(
+                            "\\bin\\s+no\\s+event\\b"
+                                    + "[^.;\\f]{0,180}?"
+                                    + "\\b(?:liable|liability)\\b",
+                            Pattern.CASE_INSENSITIVE
+                    ),
+                    CueKind.EXCLUDED_LOSS
+            ),
+            new Cue(
+                    Pattern.compile(
+                            "\\bwaives?\\s+any\\s+right\\s+"
+                                    + "to\\s+recover\\b",
+                            Pattern.CASE_INSENSITIVE
+                    ),
+                    CueKind.EXCLUDED_LOSS
             )
     );
-
-    private record Range(int start, int end) {
-    }
 
     private LiabilitySignalFinder() {
     }
@@ -80,27 +146,23 @@ public final class LiabilitySignalFinder {
         String text = document.text();
         List<Range> ranges = new ArrayList<>();
 
-        for (Pattern pattern : CUES) {
-            Matcher matcher = pattern.matcher(text);
+        for (Cue cue : CUES) {
+            Matcher matcher = cue.pattern().matcher(text);
 
             while (matcher.find()) {
-                int start = sentenceStart(text, matcher.start());
+                int start = sentenceStart(
+                        text, matcher.start()
+                );
                 int end = sentenceEnd(
                         text, matcher.start(), matcher.end()
                 );
 
-                boolean duplicate = false;
+                Range candidate = new Range(
+                        start, end, cue.kind()
+                );
 
-                for (Range previous : ranges) {
-                    if (previous.start() == start
-                            && previous.end() == end) {
-                        duplicate = true;
-                        break;
-                    }
-                }
-
-                if (!duplicate) {
-                    ranges.add(new Range(start, end));
+                if (!ranges.contains(candidate)) {
+                    ranges.add(candidate);
                 }
             }
         }
@@ -108,19 +170,25 @@ public final class LiabilitySignalFinder {
         ranges.sort(
                 Comparator.comparingInt(Range::start)
                         .thenComparingInt(Range::end)
+                        .thenComparing(Range::kind)
         );
 
         List<RiskFinding> findings = new ArrayList<>();
 
         for (Range range : ranges) {
-            int start = text.codePointCount(0, range.start());
-            int end = text.codePointCount(0, range.end());
-
-            EvidenceSpan evidence = EvidenceValidator.fromRange(
-                    document,
-                    start,
-                    end
+            int start = text.codePointCount(
+                    0, range.start()
             );
+            int end = text.codePointCount(
+                    0, range.end()
+            );
+
+            EvidenceSpan evidence =
+                    EvidenceValidator.fromRange(
+                            document, start, end
+                    );
+
+            CueKind kind = range.kind();
 
             findings.add(new RiskFinding(
                     "liability." + documentRole + "."
@@ -128,10 +196,9 @@ public final class LiabilitySignalFinder {
                     RiskFinding.Category.LIABILITY,
                     RiskFinding.Signal.CLAUSE_FOR_REVIEW,
                     RiskFinding.Priority.REVIEW_ONLY,
-                    "Liability wording found",
-                    "Check the full clause for caps, excluded losses, "
-                            + "carve-outs, and whether any exception applies.",
-                    "LIABILITY_WORDING_V1",
+                    kind.title,
+                    kind.explanation,
+                    kind.ruleId,
                     List.of(evidence)
             ));
         }
@@ -169,7 +236,9 @@ public final class LiabilitySignalFinder {
         }
 
         while (index < cueStart
-                && Character.isWhitespace(text.charAt(index))) {
+                && Character.isWhitespace(
+                        text.charAt(index)
+                )) {
             index++;
         }
 

@@ -111,7 +111,41 @@ class LiabilitySignalFinderTest {
         assertTrue(LiabilitySignalFinder.find(
                 document, "agreement").isEmpty());
     }
+    @Test
+    void capAndExceptionInOneSentenceRemainSeparateReviewCues() {
+        String clause = "Total liability shall not exceed the fees paid, "
+                + "but this limit will not limit the liability of a "
+                + "Party for intentional misconduct.";
 
+        SourceDocument document = new SourceDocument(
+                "agreement", "1", clause
+        );
+
+        List<RiskFinding> findings = LiabilitySignalFinder.find(
+                document, "agreement"
+        );
+
+        assertEquals(2, findings.size());
+        assertEquals(
+                "LIABILITY_CAP_CUE_V1",
+                findings.get(0).ruleId()
+        );
+        assertEquals(
+                "LIABILITY_EXCEPTION_CUE_V1",
+                findings.get(1).ruleId()
+        );
+
+        for (RiskFinding finding : findings) {
+            assertEquals(
+                    RiskFinding.Priority.REVIEW_ONLY,
+                    finding.priority()
+            );
+
+            EvidenceSpan span = finding.evidence().get(0);
+            EvidenceValidator.validate(document, span);
+            assertEquals(clause, span.quote());
+        }
+    }
     private static void assertSingleQuote(String clause) {
         SourceDocument document =
                 new SourceDocument("agreement", "1", clause);
