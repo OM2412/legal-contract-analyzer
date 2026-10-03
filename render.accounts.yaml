@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: folio-accounts-preview
+    runtime: docker
+    plan: free
+    region: singapore
+    repo: https://github.com/OM2412/legal-contract-analyzer
+    branch: feature/accounts-and-saved-reviews
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: db
+      - key: FOLIO_DB_URL
+        fromDatabase:
+          name: folio-accounts-preview-db
+          property: connectionString
+      - key: FOLIO_DB_USER
+        fromDatabase:
+          name: folio-accounts-preview-db
+          property: user
+      - key: FOLIO_DB_PASSWORD
+        fromDatabase:
+          name: folio-accounts-preview-db
+          property: password
+      - key: FOLIO_DEMO_AUTH_ENABLED
+        value: "true"
+      - key: FOLIO_DEMO_USERNAME
+        value: mentor
+      - key: FOLIO_DEMO_PASSWORD
+        sync: false
+      - key: FOLIO_AI_ENABLED
+        value: "false"
+
+databases:
+  - name: folio-accounts-preview-db
+    plan: free
+    region: singapore
