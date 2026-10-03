@@ -25,7 +25,7 @@ public class SavedReviewController {
     @GetMapping
     public ReviewPage list(
             Authentication authentication,
-            @RequestParam(defaultValue = "0") int page
+            @RequestParam(name = "page", defaultValue = "0") int page
     ) {
         Page<SavedReviewService.Summary> results =
                 savedReviews.list(authentication, page);
@@ -41,7 +41,7 @@ public class SavedReviewController {
     @GetMapping("/{id}")
     public SavedReviewService.Detail get(
             Authentication authentication,
-            @PathVariable UUID id
+            @PathVariable("id") UUID id
     ) {
         return savedReviews.find(authentication, id)
                 .orElseThrow(() -> new ResponseStatusException(
