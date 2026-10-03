@@ -1,79 +1,77 @@
-# Legal Contract Analyzer — Project State
+# Folio - Project State
+
+Updated: 3 October 2026
 
 ## Goal
 
-Build an evidence-based contract review platform for software service Agreements and Statements of Work (SOWs). The current working feature reviews payment terms, shows source evidence, and flags uncertainty for a human reviewer. It does not provide legal advice.
+Build an evidence-based legal document analyzer and contract risk identification system. The current workflow reviews a software service Agreement and Statement of Work (SOW). It shows source evidence and flags uncertainty for human review. It does not provide legal advice.
 
-## Development environment
+## Branches and deployment
 
-- Windows 11, VS Code
-- Java 25, Maven 3.9.16
-- Spring Boot backend with a static HTML/JavaScript browser interface
-- Apache PDFBox for text-based PDF extraction
-- Optional local Ollama model: `qwen3:4b`
-- Project folder: `C:\Users\omjad\OneDrive\Desktop\legal-contract-analyzer`
-- Git branch: `main`
-- Latest confirmed commit: `698b33b` — `Record negative payment evaluation case`
-- No Git remote was shown by `git remote -v` when this file was updated.
+- `main`: existing `folio-contract-demo` Render service. Its current deployment is separate from the accounts preview.
+- `feature/accounts-and-saved-reviews`: React interface, Risk Studio, accounts, PostgreSQL, and saved reviews.
+- Latest confirmed feature-branch commit: `47de4d2` (`Prepare isolated accounts preview deployment`), pushed to GitHub.
+- `folio-accounts-preview`: separate Render web service and PostgreSQL database, created from `render.accounts.yaml`.
+- The hosted accounts workflow was reported successful: register, review, save, refresh, and reopen a saved review.
+- Render Free PostgreSQL expires after 30 days. This preview is not a durable production database.
+- `frontend/src/RiskSignalMap.css` is untracked. Inspect its use before adding or removing it.
 
-## Working features
+## Stack
 
-- Upload an Agreement and SOW as text-based PDF or UTF-8 TXT.
-- Extract supported payment obligations and show exact quotes, text offsets, and PDF page numbers.
-- Compare days, day units, trigger, payer, payee, and payment scope.
+- Java 25, Spring Boot, Maven, and PostgreSQL
+- Flyway migration `V1__create_accounts_and_reviews.sql`
+- React and Vite frontend, packaged into the executable Spring Boot JAR
+- PDFBox for PDF text and page evidence
+- Tesseract for local OCR of supported scanned and mixed PDFs
+- Optional local Ollama quote suggestions; AI is disabled in the hosted preview
+- Docker for local image verification and Render deployment
+
+## Working review features
+
+- Upload Agreement and SOW as UTF-8 TXT or supported PDF.
+- Extract supported payment terms and compare their days, units, triggers, parties, and payment scope.
+- Show exact source quotes, text offsets, PDF pages, and OCR provenance.
+- Display all recognized payment clauses when multiple obligations are found.
+- Flag additional payment wording that the extractor cannot fully parse.
 - Scan supported payment-priority wording.
-- Show all recognized matches if a document contains multiple payment clauses, and require human review instead of selecting one silently.
-- Apply a configurable illustrative calendar-day policy; default is 30 days after invoice receipt.
-- Distinguish invoice receipt, invoice date, final acceptance, and other/unknown triggers.
-- Leave business-day conversion and unclear wording unassessed where appropriate.
-- Show explanations, warnings, document identity, and Print / Save as PDF in the browser.
-- Offer optional local Ollama quote suggestions, verified against extracted document text. These suggestions cannot change the rule-based review verdict.
+- Apply a configurable illustrative calendar-day policy. The default limit is 30 days after invoice receipt.
+- Show evidence-led Risk Studio findings for supported payment signals and narrow termination and liability wording. These signals require human interpretation.
+- Inspect quotes against the uploaded original and print or save the review as PDF.
+- Keep optional AI suggestions separate from the rule-based verdict.
 
-## Latest evaluation work
+## Accounts and saved reviews
 
-See `docs/payment-evaluation-protocol.md` and `testdata/evaluation/`.
+- Users can register, sign in, run a review, and save a backend-computed result.
+- Saved review queries are scoped to the signed-in account.
+- A local two-account check returned `404` when Account B requested Account A's saved review.
+- The hosted preview's register, review, save, refresh, and reopen flow was reported successful.
+- The preview has an additional demo password gate. Do not put its password or database credentials in Git.
 
-- EVAL-001–005 were used during development. Do not report their post-fix results as independent benchmark accuracy.
-- EVAL-004: passive-voice payment clause. The extractor recognizes Customer as payer, Vendor as payee, 20 calendar days, and invoice receipt.
-- EVAL-005: two installments, 40% after signing and 60% after final acceptance. Both are separately extracted; the review requires human attention. The CLI now displays both matches and their source quotes.
-- EVAL-006: a negated payment statement mentioning an invoice. Baseline extraction reports zero Agreement payment obligations and zero false positives for this one sample.
-- EVAL-002 has a partial-coverage fixture; verify whether its annotation file exists before treating the evaluation set as completely labeled.
-- The planned set is 20 varied, pre-labeled excerpts. Freeze labels before computing evaluation metrics. Report development examples separately from held-out results.
-- Never commit private client contracts or identifying details.
+## Verification
 
-## Run locally
+- `mvn test` passed after the database configuration update.
+- Local Docker image `folio-accounts-preview:dev` built successfully; its build ran the React build and Maven package.
+- The Docker container served the application with `HTTP 200`.
+- Local PostgreSQL reported Flyway migration version `1` with `success = t`.
+- The separate Render accounts preview was reported deployed successfully.
 
-From the project folder:
+## Evaluation and limits
 
-```powershell
-mvn test
-mvn org.codehaus.mojo:exec-maven-plugin:3.6.4:java '-Dexec.mainClass=com.omjadon.contractanalyzer.LegalContractWebApplication'
-## Continuation checkpoint — 28 September 2026
+- `testdata/evaluation/` contains 20 self-written payment excerpts and their observations. Samples used to improve rules are development cases, not independent accuracy results.
+- CUAD and ContractNLI archives are local and ignored by Git. Exploratory CUAD training audits informed narrow risk signals; they are not validated legal-risk accuracy scores.
+- Keep held-out evaluation data separate from wording used to develop rules. Report misses, false positives, and evidence overlap honestly.
+- OCR quotes need checking against scanned pages.
+- A finding does not establish which contract term is legally controlling.
+- Uploaded private contracts and dataset archives must not be committed.
 
-- Git branch: `main`; latest confirmed GitHub commit: `dbe3c99` (`Record payment evaluations and flag milestone wording`).
-- `mvn test` passed before that commit. `main` and `origin/main` were aligned afterward.
-- `pom.xml` has an uncommitted change. Inspect it before deciding whether to keep or commit it.
-- Payment evaluation is in progress under `testdata/evaluation/`; keep baseline observations separate from improvements made after seeing a sample.
-- EVAL-009: a payment obligation with a disputed-amount exception was missed; review status was `REVIEW_REQUIRED`.
-- EVAL-010: a 20-business-day term triggered by invoice date was extracted with the expected fields. Its policy assessment was `UNABLE_TO_ASSESS` because the policy uses calendar days.
-- EVAL-011: two milestone payment obligations without day counts were both missed. Initially the review was `INCOMPLETE`. A narrow coverage-scanner change now flags the sentence and produces `REVIEW_REQUIRED`, but does not extract either obligation.
-- Next: continue labeling varied evaluation samples before running them. Record misses and false positives honestly; do not report accuracy from samples used to tune extraction. Keep the optional Ollama suggestions separate from deterministic results.
-- Working style: one file or step at a time; give PowerShell command, paste-ready content, and verification. Do not use `mvn clean` on this OneDrive folder.
-## Evaluation continuation — 28 September 2026, late evening
+## Next work
 
-- EVAL-012: late-fee threshold was correctly not extracted as a primary payment deadline; baseline false positives: zero.
-- EVAL-013: `thirty (30) calendar days` was missed. The scanner returned `REVIEW_REQUIRED`; written and numeric values have not yet been implemented or cross-checked.
-- EVAL-014: payment method `by electronic bank transfer` initially caused one miss. A narrow extractor change now extracts the 30-calendar-day invoice-receipt term; its baseline miss remains recorded separately.
-- EVAL-015: 45 days after Provider **submits** an invoice was missed and flagged `REVIEW_REQUIRED`. Do not relabel invoice submission as invoice receipt.
-- EVAL-016: a quoted 30-day nonoperative example was initially extracted as one false positive alongside the correct 45-day clause. A narrow guard now excludes the disclaimed example. The baseline false positive remains in its label.
-- Evaluation samples are self-written and were used to discover and fix defects. Do not present their post-fix results as independent benchmark accuracy. The 20 varied-excerpt starting target is not yet complete; EVAL-017 through EVAL-020 remain.
-- Check `git status -sb` and `git log -4 --oneline` to verify the latest pushed commits. `pom.xml` had an uncommitted packaging change; inspect its diff before using or committing it.
-- Next implementation sequence: keep the 20 self-written evaluation examples and their baseline/post-fix observations distinct; verify OCR on varied multi-page documents, then continue persistent data, React UI, security and deployment. These examples are development cases, not an independent accuracy benchmark.
-## Packaging checkpoint — 28 September 2026
+1. Freeze the current Risk Studio rules and evaluation protocol before using held-out benchmark data.
+2. Evaluate supported clause categories with source evidence; record misses, false positives, and limits.
+3. Polish the hosted demo workflow and responsive Risk Studio interface.
+4. Address production requirements before treating the preview as a persistent service: durable database, backup and retention policy, session behavior, and security review.
+5. Plan the eventual `main` merge with its database deployment changes. Do not merge the feature branch into `main` while the existing main service lacks the required database configuration.
 
-- Latest confirmed GitHub commit: `a1725b1` (`Package executable Spring Boot JAR`); `main` and `origin/main` are aligned and the working tree was clean.
-- `mvn package` completed successfully after configuring the Spring Boot Maven plugin with classifier `exec`.
-- Executable output: `target/legal-contract-analyzer-0.1.0-SNAPSHOT-exec.jar`.
-- Run locally with `java -jar "target/legal-contract-analyzer-0.1.0-SNAPSHOT-exec.jar"` and open `http://127.0.0.1:8080/`. - Executable JAR verified on port 8081: the PDF review API returned Agreement and SOW evidence with page numbers, a 30-versus-60-day comparison, and `SOW_TEXT_CANDIDATE`.
-- An earlier package attempt failed while renaming a JAR inside OneDrive's `target` folder; the classifier resolved that build failure.
-- The executable JAR served the PDF review API locally; the two-page image-only OCR test passed. Fully image-only PDFs of up to 20 pages now use local Tesseract. Mixed text/scanned PDFs now use per-page OCR for pages without extractable text; the two-page mixed-PDF test passed; production deployment, database and React/3D UI remain future work.
+## Working style
+
+The project is edited manually in VS Code on Windows. Work one file or step at a time, with PowerShell commands and paste-ready code when replacing a file. Inspect existing files before changing them. Use `mvn test` without `clean` because OneDrive has previously locked files under `target/`.
