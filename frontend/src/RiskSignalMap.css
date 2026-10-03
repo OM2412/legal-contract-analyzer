@@ -1,0 +1,259 @@
+.risk-map {
+  position: relative;
+  overflow: hidden;
+  margin: 26px 0 30px;
+  padding: clamp(20px, 3vw, 34px);
+  border: 1px solid rgba(200, 182, 255, 0.24);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 152, 127, 0.09), transparent 38%),
+    radial-gradient(circle at 12% 80%, rgba(200, 182, 255, 0.09), transparent 30%),
+    #201a31;
+}
+
+.risk-map::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: linear-gradient(to bottom, black, transparent);
+  pointer-events: none;
+}
+
+.risk-map__header {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.risk-map__header span {
+  color: #ff987f;
+  font: 700 11px/1.4 var(--font-mono, monospace);
+  letter-spacing: 0.13em;
+}
+
+.risk-map__header p {
+  max-width: 36ch;
+  margin: 0;
+  color: #c4b9d1;
+  font-size: 12px;
+  line-height: 1.55;
+  text-align: right;
+}
+
+.risk-map__network {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr minmax(132px, 0.8fr) 1fr;
+  align-items: center;
+  gap: clamp(12px, 3vw, 38px);
+  min-height: 210px;
+}
+
+.risk-map__connector {
+  position: absolute;
+  top: 50%;
+  width: 28%;
+  height: 1px;
+  background: linear-gradient(90deg, #c8b6ff, #ff987f);
+  transform: translateY(-50%);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.risk-map__connector--left {
+  left: 19%;
+}
+
+.risk-map__connector--right {
+  right: 19%;
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.risk-map__connector::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff987f;
+  box-shadow: 0 0 13px #ff987f;
+  animation: risk-map-travel 3.4s ease-in-out infinite;
+}
+
+.risk-map__connector--right::after {
+  animation-delay: 1.1s;
+}
+
+.risk-map__node {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  padding: 22px 18px;
+  border: 1px solid rgba(200, 182, 255, 0.25);
+  border-radius: 14px;
+  background: #2c233e;
+  color: #f9f5ef;
+  text-align: left;
+  box-shadow: 0 15px 35px rgba(5, 2, 19, 0.16);
+}
+
+button.risk-map__node {
+  width: 100%;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    transform 200ms ease,
+    border-color 200ms ease,
+    background 200ms ease;
+}
+
+button.risk-map__node:hover {
+  transform: translateY(-4px);
+  border-color: #ff987f;
+}
+
+button.risk-map__node:focus-visible {
+  outline: 3px solid #c8b6ff;
+  outline-offset: 3px;
+}
+
+button.risk-map__node[aria-pressed="true"] {
+  border-color: #ff987f;
+  background: #3a2948;
+}
+
+.risk-map__node--center {
+  padding: 27px 16px;
+  border-color: rgba(255, 152, 127, 0.55);
+  border-radius: 22px;
+  background: #35253f;
+  text-align: center;
+  transform: rotate(-3deg);
+}
+
+.risk-map__node--center > * {
+  display: block;
+  transform: rotate(3deg);
+}
+
+.risk-map__label {
+  display: block;
+  margin-bottom: 11px;
+  color: #c8b6ff;
+  font: 700 10px/1.4 var(--font-mono, monospace);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.risk-map__node--center .risk-map__label {
+  color: #ff987f;
+}
+
+.risk-map__value {
+  display: block;
+  margin-bottom: 5px;
+  font-size: clamp(1.7rem, 3vw, 2.7rem);
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.risk-map__caption {
+  display: block;
+  color: #c4b9d1;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.risk-map__footer {
+  position: relative;
+  margin: 2px 0 0;
+  color: #c4b9d1;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+@keyframes risk-map-travel {
+  from {
+    left: 0;
+    opacity: 0;
+  }
+
+  20%,
+  80% {
+    opacity: 1;
+  }
+
+  to {
+    left: calc(100% - 7px);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .risk-map__header {
+    display: block;
+  }
+
+  .risk-map__header p {
+    margin-top: 8px;
+    text-align: left;
+  }
+
+  .risk-map__network {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    gap: 12px;
+    margin: 22px 0;
+  }
+
+  .risk-map__connector {
+    display: none;
+  }
+
+  .risk-map__node--center {
+    transform: none;
+  }
+
+  .risk-map__node--center > * {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .risk-map__connector::after {
+    animation: none;
+  }
+
+  button.risk-map__node {
+    transition: none;
+  }
+}
+
+@media print {
+  .risk-map {
+    border: 1px solid #aaa;
+    background: white;
+    color: black;
+  }
+
+  .risk-map__node,
+  .risk-map__node--center {
+    border: 1px solid #aaa;
+    background: white;
+    color: black;
+    box-shadow: none;
+  }
+
+  .risk-map__connector::after {
+    animation: none;
+  }
+}

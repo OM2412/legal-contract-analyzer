@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import RiskSignalMap from './RiskSignalMap'
 import './RiskStudio.css'
 
 const CATEGORIES = [
@@ -93,6 +94,7 @@ function EvidenceSource({ item, files, onInspect, index }) {
 function RiskStudio({ data, files, onInspect }) {
   const [activeCategory, setActiveCategory] = useState('ALL')
   const [activeSignal, setActiveSignal] = useState('ALL')
+  const [activeSource, setActiveSource] = useState('ALL')
   const [selectedId, setSelectedId] = useState(null)
 
   if (!data) return null
@@ -100,22 +102,29 @@ function RiskStudio({ data, files, onInspect }) {
   const hasFindingsField = Array.isArray(data.riskFindings)
   const findings = hasFindingsField ? data.riskFindings : []
 
+  const hasSelectedSource = (finding) =>
+    activeSource === 'ALL' ||
+    (finding.evidence ?? []).some(
+      (item) => item.documentId === activeSource
+    )
+
   const visible = findings.filter((finding) =>
     (activeCategory === 'ALL' ||
       finding.category === activeCategory) &&
     (activeSignal === 'ALL' ||
-      finding.signal === activeSignal)
+      finding.signal === activeSignal) &&
+    hasSelectedSource(finding)
   )
 
-  const selected = visible.find((finding) =>
-    finding.findingId === selectedId
+  const selected = visible.find(
+    (finding) => finding.findingId === selectedId
   ) ?? visible[0]
 
-  const activeCategoryCount = activeCategory === 'ALL'
-    ? findings.length
-    : findings.filter((finding) =>
-        finding.category === activeCategory
-      ).length
+  const activeCategoryCount = findings.filter((finding) =>
+    (activeCategory === 'ALL' ||
+      finding.category === activeCategory) &&
+    hasSelectedSource(finding)
+  ).length
 
   function chooseCategory(category) {
     setActiveCategory(category)
@@ -219,8 +228,8 @@ function RiskStudio({ data, files, onInspect }) {
           </button>
 
           {CATEGORIES.map((category) => {
-            const count = findings.filter((finding) =>
-              finding.category === category.id
+            const count = findings.filter(
+              (finding) => finding.category === category.id
             ).length
 
             return (
@@ -249,6 +258,17 @@ function RiskStudio({ data, files, onInspect }) {
           })}
         </div>
 
+        {findings.length > 0 && (
+          <RiskSignalMap
+            findings={findings}
+            activeSource={activeSource}
+            onSelect={(source) => {
+              setActiveSource(source)
+              setSelectedId(null)
+            }}
+          />
+        )}
+
         <div className="risk-studio__section-heading risk-studio__section-heading--queue">
           <div>
             <span className="risk-studio__section-index">
@@ -271,7 +291,8 @@ function RiskStudio({ data, files, onInspect }) {
                 (activeCategory === 'ALL' ||
                   finding.category === activeCategory) &&
                 (value === 'ALL' ||
-                  finding.signal === value)
+                  finding.signal === value) &&
+                hasSelectedSource(finding)
               ).length
 
               return (
@@ -336,7 +357,7 @@ function RiskStudio({ data, files, onInspect }) {
             </div>
 
             <article
-             key={selected.findingId}
+              key={selected.findingId}
               className="risk-studio__detail"
               id="risk-studio-detail"
               aria-labelledby="risk-studio-detail-title"
@@ -424,41 +445,47 @@ function RiskStudio({ data, files, onInspect }) {
               <button
                 type="button"
                 className="risk-studio__reset"
-                onClick={() => chooseCategory('ALL')}
+                onClick={() => {
+                  setActiveSource('ALL')
+                  chooseCategory('ALL')
+                }}
               >
                 Clear filters
               </button>
             )}
           </div>
         )}
-{findings.length > 0 && (
-  <div className="risk-studio__print-report">
-    {findings.map((finding, index) => (
-      <article
-        className="risk-studio__print-item"
-        key={finding.findingId}
-      >
-        <small>
-          {index + 1}. {readable(finding.category)} /{' '}
-          {readable(finding.priority)}
-        </small>
-        <h4>{finding.title}</h4>
-        <p>{finding.explanation}</p>
-        {(finding.evidence ?? []).map((item, sourceIndex) => (
-          <div
-            key={`${item.documentId}-${item.start}-${sourceIndex}`}
-          >
-            <blockquote>{item.quote}</blockquote>
-            <p>
-              {documentRole(item.documentId)} /{' '}
-              {sourceLocation(item)}
-            </p>
+
+        {findings.length > 0 && (
+          <div className="risk-studio__print-report">
+            {findings.map((finding, index) => (
+              <article
+                className="risk-studio__print-item"
+                key={finding.findingId}
+              >
+                <small>
+                  {index + 1}. {readable(finding.category)} /{' '}
+                  {readable(finding.priority)}
+                </small>
+                <h4>{finding.title}</h4>
+                <p>{finding.explanation}</p>
+
+                {(finding.evidence ?? []).map((item, sourceIndex) => (
+                  <div
+                    key={`${item.documentId}-${item.start}-${sourceIndex}`}
+                  >
+                    <blockquote>{item.quote}</blockquote>
+                    <p>
+                      {documentRole(item.documentId)} /{' '}
+                      {sourceLocation(item)}
+                    </p>
+                  </div>
+                ))}
+              </article>
+            ))}
           </div>
-        ))}
-      </article>
-    ))}
-  </div>
-)}
+        )}
+
         <footer className="risk-studio__note">
           Current scope: supported payment timing, narrow
           termination wording, and narrow liability wording.
