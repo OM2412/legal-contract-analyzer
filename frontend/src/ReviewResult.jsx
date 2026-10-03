@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import EvidenceLens from './EvidenceLens'
+import RiskStudio from './RiskStudio'
 import ReviewChecklist from './ReviewChecklist'
 import SaveReviewButton from './SaveReviewButton'
 function readable(value) {
@@ -82,7 +83,7 @@ function DurationChart({ data }) {
     data.policyMaxDays > 0
 
   const rows = [
-    { label: 'Agreement', days: agreement.days, kind: 'agreement' },
+    { label: 'Agreement', days: agreement.days, kind: 'agreement'},
     { label: 'Statement of Work', days: sow.days, kind: 'sow' },
   ]
 
@@ -379,6 +380,12 @@ function ReviewResult({
           </p>
         </div>
       </section>
+
+      <RiskStudio
+        data={data}
+        files={files}
+        onInspect={inspect}
+      />
 
       {selectedEvidence && (
         <EvidenceLens

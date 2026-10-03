@@ -36,7 +36,10 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.multipart.MultipartFile;
-
+import com.omjadon.contractanalyzer.risk.PaymentRiskFinder;
+import com.omjadon.contractanalyzer.risk.TerminationSignalFinder;
+import java.util.ArrayList;
+import com.omjadon.contractanalyzer.risk.LiabilitySignalFinder;
 @RestController
 public class ReviewController {
     private final LocalOllamaClient ollamaClient;
@@ -235,6 +238,73 @@ public class ReviewController {
                 "sowUnrecognized",
                 result.sowUnrecognized().stream()
                         .map(span -> evidence(sow, span, sowPdf))
+                        .toList()
+        );
+                var findings = new ArrayList<>(
+                PaymentRiskFinder.find(agreement, sow, result)
+        );
+        findings.addAll(
+                TerminationSignalFinder.find(agreement, "agreement")
+        );
+        findings.addAll(
+                TerminationSignalFinder.find(sow, "sow")
+        );
+        findings.addAll(
+        LiabilitySignalFinder.find(agreement, "agreement")
+);
+findings.addAll(
+        LiabilitySignalFinder.find(sow, "sow")
+);
+                response.put(
+                "riskFindings",
+                findings.stream()
+                        .map(finding -> {
+                            Map<String, Object> details =
+                                    new LinkedHashMap<>();
+
+                            details.put("findingId", finding.findingId());
+                            details.put("category", finding.category().name());
+                            details.put("signal", finding.signal().name());
+                            details.put("priority", finding.priority().name());
+                            details.put("title", finding.title());
+                            details.put(
+                                    "explanation",
+                                    finding.explanation()
+                            );
+                            details.put("ruleId", finding.ruleId());
+
+                            details.put(
+                                    "evidence",
+                                    finding.evidence().stream()
+                                            .map(span -> {
+                                                if (span.documentId().equals(
+                                                        agreement.documentId()
+                                                )) {
+                                                    return evidence(
+                                                            agreement,
+                                                            span,
+                                                            agreementPdf
+                                                    );
+                                                }
+                                                if (span.documentId().equals(
+                                                        sow.documentId()
+                                                )) {
+                                                    return evidence(
+                                                            sow,
+                                                            span,
+                                                            sowPdf
+                                                    );
+                                                }
+                                                throw new IllegalArgumentException(
+                                                        "Risk evidence has an "
+                                                                + "unknown document ID"
+                                                );
+                                            })
+                                            .toList()
+                            );
+
+                            return details;
+                        })
                         .toList()
         );
         response.put("policyMaxDays", maxDays);
