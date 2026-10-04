@@ -54,7 +54,7 @@ function validateDocument(document, where) {
   }
   if (!statSync(path).isFile()) fail(`${where}.path must name a file`)
   const bytes = readFileSync(path)
-  const decoded = new TextDecoder('utf-8', { fatal: true }).decode(bytes)
+  const decoded = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes)
   if (!decoded.trim() || decoded.includes('\0')) {
     fail(`${where}.path is blank or contains a null character`)
   }
