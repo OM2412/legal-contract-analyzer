@@ -10,14 +10,15 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/** Finds unsupported payment wording for human review. */
 public final class PaymentClauseCoverageScanner {
 
     private static final Pattern PAYMENT_START = Pattern.compile(
             "\\b(?:(?:Client|Customer)"
-                    + "\\s+(?:shall|must)\\s+pay\\s+"
-                    + "(?:the\\s+)?(?:Provider|Vendor)"
-                    + "\\s+(?:\\d{1,3}%\\s+of\\s+)?the\\s+"
-                    + "(?:project|implementation)\\s+fee"
+                    + "\\s+(?:shall|must)\\s+pay\\b"
+                    + "(?!\\s+attention\\b)"
+                    + "(?=[^.;\\f\\r\\n]{0,240}"
+                    + "\\b(?:fees?|charges?|invoices?|amounts?|percent)\\b)"
                     + "|The\\s+project\\s+fee\\s+is\\s+due\\s+and"
                     + "\\s+payable\\s+by\\s+Client\\s+to\\s+Provider)\\b",
             Pattern.CASE_INSENSITIVE
@@ -57,12 +58,14 @@ public final class PaymentClauseCoverageScanner {
             while (endIndex < text.length()
                     && endIndex - matcher.end() < MAX_CONTEXT_CHARS
                     && text.charAt(endIndex) != '.'
+                    && text.charAt(endIndex) != '\f'
                     && text.charAt(endIndex) != '\n'
                     && text.charAt(endIndex) != '\r') {
                 endIndex++;
             }
 
-            if (endIndex < text.length() && text.charAt(endIndex) == '.') {
+            if (endIndex < text.length()
+                    && text.charAt(endIndex) == '.') {
                 endIndex++;
             }
 

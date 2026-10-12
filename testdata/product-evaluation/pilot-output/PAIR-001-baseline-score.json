@@ -1,0 +1,28 @@
+{
+  "manifestSha256": "6df715285a9ebe0beff01e44671c37c548f904e710e62da55f119e32f4be4c95",
+  "pairs": 1,
+  "documents": 2,
+  "goldObligations": 3,
+  "predictedObligations": 0,
+  "matched": 0,
+  "falsePositives": 0,
+  "misses": 3,
+  "exactEvidence": 0,
+  "fieldsChecked": 0,
+  "fieldErrors": {},
+  "fieldsUnavailable": 0,
+  "statuses": {
+    "INCOMPLETE": 1
+  },
+  "statusLabelsChecked": 1,
+  "statusErrors": 1,
+  "precision": null,
+  "recall": 0,
+  "f1": 0,
+  "note": "One-to-one candidate evidence overlap (at least half the shorter span), not legal classification accuracy. Field checks cover aligned single-term documents only.",
+  "problems": [
+    "PAIR-001 agreement: gold 1, predicted 0, matched 0",
+    "PAIR-001 sow: gold 2, predicted 0, matched 0",
+    "PAIR-001: review status expected REVIEW_REQUIRED, got INCOMPLETE"
+  ]
+}
