@@ -35,9 +35,8 @@ class PaymentNamedPartyCoverageTest {
             30,
             PaymentTerm.PaymentTrigger.INVOICE_RECEIPT
     );
-
     @Test
-    void pilotRequiresReviewWithThreeExactCoverageQuotes()
+    void pilotKeepsUnsupportedInstallmentsForReview()
             throws Exception {
         SourceDocument agreement = loadPilot("agreement");
         SourceDocument sow = loadPilot("sow");
@@ -51,13 +50,16 @@ class PaymentNamedPartyCoverageTest {
                 review.status()
         );
 
-        assertEquals(1, review.agreementUnrecognized().size());
+        assertEquals(1, review.agreementMatches().size());
+        assertTrue(review.agreementUnrecognized().isEmpty());
         assertEquals(2, review.sowUnrecognized().size());
 
-        assertEquals(
-                AGREEMENT_QUOTE,
-                review.agreementUnrecognized().get(0).quote()
-        );
+        var agreementEvidence =
+                review.agreementMatches().get(0).evidence();
+
+        assertEquals(AGREEMENT_QUOTE, agreementEvidence.quote());
+        EvidenceValidator.validate(agreement, agreementEvidence);
+
         assertEquals(
                 FIRST_SOW_QUOTE,
                 review.sowUnrecognized().get(0).quote()
@@ -67,9 +69,6 @@ class PaymentNamedPartyCoverageTest {
                 review.sowUnrecognized().get(1).quote()
         );
 
-        review.agreementUnrecognized().forEach(span ->
-                EvidenceValidator.validate(agreement, span)
-        );
         review.sowUnrecognized().forEach(span ->
                 EvidenceValidator.validate(sow, span)
         );
@@ -77,7 +76,6 @@ class PaymentNamedPartyCoverageTest {
         assertTrue(review.comparison().isEmpty());
         assertTrue(review.textualCandidateAssessment().isEmpty());
     }
-
     @Test
     void invoiceIssuanceAndNegationDoNotCreateCoverageFindings() {
         List<String> negatives = List.of(

@@ -110,7 +110,31 @@ public final class PaymentTermExtractor {
         addMatches(document, DUE_AND_PAYABLE_CLAUSE, true, true, false, terms);
         addMatches(document, PASSIVE_PAYMENT_CLAUSE, true, false, false, terms);
         addMatches(document, INSTALLMENT_CLAUSE, false, false, true, terms);
+        for (PaymentTerm candidate
+                : NamedPartyPaymentTermExtractor.extractAll(document)) {
+            int start = document.text().offsetByCodePoints(
+                    0, candidate.evidence().start()
+            );
+            int end = document.text().offsetByCodePoints(
+                    0, candidate.evidence().end()
+            );
 
+            if (isExplicitlyNonOperativeExample(
+                    document.text(), start, end
+            )) {
+                continue;
+            }
+
+            boolean overlapsExisting = terms.stream().anyMatch(term ->
+                    term.evidence().start() < candidate.evidence().end()
+                            && candidate.evidence().start()
+                                    < term.evidence().end()
+            );
+
+            if (!overlapsExisting) {
+                terms.add(candidate);
+            }
+        }
         terms.sort(Comparator.comparingInt(
                 term -> term.evidence().start()
         ));
