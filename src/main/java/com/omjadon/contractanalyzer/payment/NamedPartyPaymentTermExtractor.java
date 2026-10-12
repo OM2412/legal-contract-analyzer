@@ -97,7 +97,9 @@ final class NamedPartyPaymentTermExtractor {
                     EvidenceValidator.fromRange(document, start, end)
             ));
         }
-
+        terms.addAll(
+                NamedPartyInstallmentExtractor.extractAll(document)
+        );
         return List.copyOf(terms);
     }
 

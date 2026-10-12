@@ -35,8 +35,8 @@ class PaymentNamedPartyCoverageTest {
             30,
             PaymentTerm.PaymentTrigger.INVOICE_RECEIPT
     );
-    @Test
-    void pilotKeepsUnsupportedInstallmentsForReview()
+        @Test
+    void pilotKeepsRemainingInstallmentForReview()
             throws Exception {
         SourceDocument agreement = loadPilot("agreement");
         SourceDocument sow = loadPilot("sow");
@@ -51,27 +51,24 @@ class PaymentNamedPartyCoverageTest {
         );
 
         assertEquals(1, review.agreementMatches().size());
+        assertEquals(1, review.sowMatches().size());
         assertTrue(review.agreementUnrecognized().isEmpty());
-        assertEquals(2, review.sowUnrecognized().size());
+        assertEquals(1, review.sowUnrecognized().size());
 
         var agreementEvidence =
                 review.agreementMatches().get(0).evidence();
+        var sowEvidence =
+                review.sowMatches().get(0).evidence();
+        var remainingEvidence =
+                review.sowUnrecognized().get(0);
 
         assertEquals(AGREEMENT_QUOTE, agreementEvidence.quote());
+        assertEquals(FIRST_SOW_QUOTE, sowEvidence.quote());
+        assertEquals(SECOND_SOW_QUOTE, remainingEvidence.quote());
+
         EvidenceValidator.validate(agreement, agreementEvidence);
-
-        assertEquals(
-                FIRST_SOW_QUOTE,
-                review.sowUnrecognized().get(0).quote()
-        );
-        assertEquals(
-                SECOND_SOW_QUOTE,
-                review.sowUnrecognized().get(1).quote()
-        );
-
-        review.sowUnrecognized().forEach(span ->
-                EvidenceValidator.validate(sow, span)
-        );
+        EvidenceValidator.validate(sow, sowEvidence);
+        EvidenceValidator.validate(sow, remainingEvidence);
 
         assertTrue(review.comparison().isEmpty());
         assertTrue(review.textualCandidateAssessment().isEmpty());
