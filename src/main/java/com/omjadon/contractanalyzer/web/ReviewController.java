@@ -395,6 +395,24 @@ findings.addAll(
                 "candidates", candidates
         );
     }
+        @ExceptionHandler(
+            org.springframework.web.method.annotation
+                    .MethodArgumentTypeMismatchException.class
+    )
+    public ResponseEntity<Map<String, String>> invalidParameter(
+            org.springframework.web.method.annotation
+                    .MethodArgumentTypeMismatchException error
+    ) {
+        String message = "Invalid request parameter";
+
+        if ("maxDays".equals(error.getName())) {
+            message =
+                    "Policy limit must be a whole number between 1 and 3650";
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", message));
+    }
     @ExceptionHandler({IOException.class, IllegalArgumentException.class})
     public ResponseEntity<Map<String, String>> invalidUpload(
             Exception error

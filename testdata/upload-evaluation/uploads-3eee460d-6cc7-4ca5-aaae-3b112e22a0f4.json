@@ -1,0 +1,390 @@
+{
+  "runId": "3eee460d-6cc7-4ca5-aaae-3b112e22a0f4",
+  "startedAt": "2026-10-13T23:13:18.497Z",
+  "finishedAt": "2026-10-13T23:13:25.379Z",
+  "baseUrl": "http://127.0.0.1:8081",
+  "fixtureVersions": {
+    "agreement": "sha256:285ca7acbb8e791c4b0dd5d5bdc74c03ddb056ac89e36e9be572c555178a6f73",
+    "sow": "sha256:c971cc96352c3f390df0c746cb83bf6cf96a85983c53ad3028b5208cca5b692a"
+  },
+  "checksRun": 62,
+  "passed": 62,
+  "failed": 0,
+  "completed": true,
+  "failure": null,
+  "checks": [
+    {
+      "name": "Test account registration",
+      "actual": 201,
+      "expected": 201,
+      "passed": true
+    },
+    {
+      "name": "Test account login",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Authenticated identity",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Valid TXT upload",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Agreement source version",
+      "actual": "sha256:285ca7acbb8e791c4b0dd5d5bdc74c03ddb056ac89e36e9be572c555178a6f73",
+      "expected": "sha256:285ca7acbb8e791c4b0dd5d5bdc74c03ddb056ac89e36e9be572c555178a6f73",
+      "passed": true
+    },
+    {
+      "name": "SOW source version",
+      "actual": "sha256:c971cc96352c3f390df0c746cb83bf6cf96a85983c53ad3028b5208cca5b692a",
+      "expected": "sha256:c971cc96352c3f390df0c746cb83bf6cf96a85983c53ad3028b5208cca5b692a",
+      "passed": true
+    },
+    {
+      "name": "Expected review status",
+      "actual": "REVIEW_REQUIRED",
+      "expected": "REVIEW_REQUIRED",
+      "passed": true
+    },
+    {
+      "name": "Empty Agreement status",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Empty Agreement JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Empty Agreement no internal error details",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Empty SOW status",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Empty SOW JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Empty SOW no internal error details",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Whitespace TXT status",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Whitespace TXT JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Whitespace TXT no internal error details",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Unsupported extension status",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Unsupported extension JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Unsupported extension no internal error details",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Invalid UTF-8 status",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Invalid UTF-8 JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Invalid UTF-8 no internal error details",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Null character TXT status",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Null character TXT JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Null character TXT no internal error details",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Missing Agreement status",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Missing Agreement JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Missing Agreement no internal error details",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Missing SOW status",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Missing SOW JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Missing SOW no internal error details",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Policy zero status",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Policy zero JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Policy zero no internal error details",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Policy above maximum status",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Policy above maximum JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Policy above maximum no internal error details",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Noninteger policy status",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Noninteger policy JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Noninteger policy no internal error details",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "TXT over 1 MiB status",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "TXT over 1 MiB JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "TXT over 1 MiB no internal error details",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Corrupt PDF status",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Corrupt PDF JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Corrupt PDF no internal error details",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "TXT disguised as PDF status",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "TXT disguised as PDF JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "TXT disguised as PDF no internal error details",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Blank PDF status",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Blank PDF JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Blank PDF no internal error details",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "PDF over 10 MiB status",
+      "actual": 413,
+      "expected": 413,
+      "passed": true
+    },
+    {
+      "name": "PDF over 10 MiB JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "PDF over 10 MiB no internal error details",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Multipart request over 20 MiB status",
+      "actual": 413,
+      "expected": 413,
+      "passed": true
+    },
+    {
+      "name": "Multipart request over 20 MiB JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Multipart request over 20 MiB no internal error details",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Valid upload after rejected inputs",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Final Agreement matches",
+      "actual": 1,
+      "expected": 1,
+      "passed": true
+    },
+    {
+      "name": "Final SOW matches",
+      "actual": 2,
+      "expected": 2,
+      "passed": true
+    },
+    {
+      "name": "Logout",
+      "actual": 204,
+      "expected": 204,
+      "passed": true
+    }
+  ],
+  "note": "Live local upload validation, not a performance or penetration test. One generated test account remains locally. No passwords, cookies or tokens are stored."
+}
