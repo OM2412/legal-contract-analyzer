@@ -35,8 +35,9 @@ class PaymentNamedPartyCoverageTest {
             30,
             PaymentTerm.PaymentTrigger.INVOICE_RECEIPT
     );
-        @Test
-    void pilotKeepsRemainingInstallmentForReview()
+
+    @Test
+    void pilotRetainsBothInstallmentsWithoutChoosingOne()
             throws Exception {
         SourceDocument agreement = loadPilot("agreement");
         SourceDocument sow = loadPilot("sow");
@@ -51,38 +52,52 @@ class PaymentNamedPartyCoverageTest {
         );
 
         assertEquals(1, review.agreementMatches().size());
-        assertEquals(1, review.sowMatches().size());
+        assertEquals(2, review.sowMatches().size());
         assertTrue(review.agreementUnrecognized().isEmpty());
-        assertEquals(1, review.sowUnrecognized().size());
+        assertTrue(review.sowUnrecognized().isEmpty());
 
-        var agreementEvidence =
-                review.agreementMatches().get(0).evidence();
-        var sowEvidence =
-                review.sowMatches().get(0).evidence();
-        var remainingEvidence =
-                review.sowUnrecognized().get(0);
+        assertEquals(
+                AGREEMENT_QUOTE,
+                review.agreementMatches().get(0).evidence().quote()
+        );
+        assertEquals(
+                FIRST_SOW_QUOTE,
+                review.sowMatches().get(0).evidence().quote()
+        );
 
-        assertEquals(AGREEMENT_QUOTE, agreementEvidence.quote());
-        assertEquals(FIRST_SOW_QUOTE, sowEvidence.quote());
-        assertEquals(SECOND_SOW_QUOTE, remainingEvidence.quote());
+        var remaining = review.sowMatches().get(1);
 
-        EvidenceValidator.validate(agreement, agreementEvidence);
-        EvidenceValidator.validate(sow, sowEvidence);
-        EvidenceValidator.validate(sow, remainingEvidence);
+        assertTrue(
+                remaining.evidence().quote().startsWith(FIRST_SOW_QUOTE)
+        );
+        assertTrue(
+                remaining.evidence().quote().endsWith(SECOND_SOW_QUOTE)
+        );
+        assertEquals(
+                "remaining 65 percent of the migration fee",
+                remaining.scope()
+        );
 
+        review.agreementMatches().forEach(term ->
+                EvidenceValidator.validate(agreement, term.evidence())
+        );
+        review.sowMatches().forEach(term ->
+                EvidenceValidator.validate(sow, term.evidence())
+        );
+
+        assertTrue(review.sowTerm().isEmpty());
         assertTrue(review.comparison().isEmpty());
         assertTrue(review.textualCandidateAssessment().isEmpty());
     }
+
     @Test
     void invoiceIssuanceAndNegationDoNotCreateCoverageFindings() {
-        List<String> negatives = List.of(
+        for (String text : List.of(
                 "Atlas Systems must issue its invoice within five "
                         + "days after the kickoff meeting.",
                 "Customer shall not pay Atlas Systems the fee.",
                 "Customer must pay attention to invoice wording."
-        );
-
-        for (String text : negatives) {
+        )) {
             SourceDocument document = new SourceDocument(
                     "negative", "1", text
             );
@@ -102,7 +117,8 @@ class PaymentNamedPartyCoverageTest {
                 "Customer must pay Atlas Systems the support charge";
 
         SourceDocument document = new SourceDocument(
-                "unicode", "1",
+                "unicode",
+                "1",
                 "\uD83D\uDCC4 " + clause + "\fNext page text."
         );
 
@@ -128,7 +144,8 @@ class PaymentNamedPartyCoverageTest {
     @Test
     void recognizedPaymentDoesNotGetDuplicateCoverageWarning() {
         SourceDocument document = new SourceDocument(
-                "recognized", "1",
+                "recognized",
+                "1",
                 "Client shall pay Provider the project fee within "
                         + "30 calendar days after receipt of the invoice."
         );
