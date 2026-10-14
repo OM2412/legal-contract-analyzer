@@ -28,6 +28,9 @@ public class AppUser {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    @Column(name = "credential_version", nullable = false)
+    private long credentialVersion;
+
     protected AppUser() {
         // Required by JPA.
     }
@@ -43,6 +46,7 @@ public class AppUser {
         this.displayName = required(displayName, "displayName");
         this.passwordHash = required(passwordHash, "passwordHash");
         this.createdAt = Instant.now();
+        this.credentialVersion = 0;
 
         if (this.email.length() > 320
                 || this.displayName.length() > 120
@@ -73,12 +77,39 @@ public class AppUser {
         return createdAt;
     }
 
+    public long credentialVersion() {
+        return credentialVersion;
+    }
+
+    /**
+     * Accepts an encoded password only.
+     * The reset service must validate and encode the new password first.
+     */
+    void replacePasswordHash(String encodedPassword) {
+        String replacement = required(
+                encodedPassword,
+                "encodedPassword"
+        );
+
+        if (replacement.length() > 255) {
+            throw new IllegalArgumentException(
+                    "Encoded password exceeds database limit"
+            );
+        }
+
+        long nextVersion = Math.incrementExact(credentialVersion);
+
+        this.passwordHash = replacement;
+        this.credentialVersion = nextVersion;
+    }
+
     private static String required(String value, String field) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(
                     field + " must not be blank"
             );
         }
+
         return value.trim();
     }
 }

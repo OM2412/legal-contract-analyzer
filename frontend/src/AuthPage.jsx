@@ -202,7 +202,11 @@ function AuthPage({ onAuthenticated }) {
               <span aria-hidden="true">↗</span>
             </button>
           </form>
-
+{!registering && (
+  <div className="auth-recovery-links">
+    <a href="#forgot-password">Forgot your password?</a>
+  </div>
+)}
           <p className="auth-footnote">
             Folio helps organize potential risks. Verify findings
             against the original documents.

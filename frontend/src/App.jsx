@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import ReviewWorkspace from './ReviewWorkspace'
 import ReviewResult from './ReviewResult'
 import AiStudio from './AiStudio'
@@ -7,6 +7,7 @@ import SavedReviews from './SavedReviews'
 import { apiFetch } from './apiClient'
 import './App.css'
 import './SavedReviews.css'
+import PasswordRecovery from './PasswordRecovery'
 const AI_ENABLED = import.meta.env.VITE_AI_ENABLED !== 'false'
 const sample = {
   agreement: {
@@ -137,10 +138,21 @@ function SampleReview() {
   )
 }
 function viewFromHash() {
-  if (window.location.hash === '#sign-in') return 'auth'
-  if (window.location.hash === '#my-reviews') return 'archive'
-  if (AI_ENABLED && window.location.hash === '#ai-studio') return 'ai-studio'
+  const hash = window.location.hash
+
+  if (hash.startsWith('#reset-password')) return 'reset'
+  if (hash === '#forgot-password') return 'forgot'
+  if (hash === '#sign-in') return 'auth'
+  if (hash === '#my-reviews') return 'archive'
+  if (AI_ENABLED && hash === '#ai-studio') return 'ai-studio'
+
   return 'site'
+}
+
+function resetTokenFromHash() {
+  return window.location.hash.match(
+    /^#reset-password=([A-Za-z0-9_-]{43})$/
+  )?.[1] ?? ''
 }
 function App() {
   const [review, setReview] = useState(null)
@@ -157,29 +169,64 @@ function App() {
   })
   const [view, setView] = useState(viewFromHash)
   const [accountStatus, setAccountStatus] = useState('checking')
-  useEffect(() => {
-    let active = true
-    apiFetch('/api/auth/me')
-      .then((response) => {
-        if (active) {
-          setAccountStatus(response.ok ? 'signed-in' : 'signed-out')
-        }
-      })
-      .catch(() => {
-        if (active) setAccountStatus('signed-out')
-      })
-    return () => {
-      active = false
+  const [resetToken, setResetToken] = useState(resetTokenFromHash)
+const [recoveryEntry, setRecoveryEntry] = useState(0)
+const authRevision = useRef(0)
+ useEffect(() => {
+  let active = true
+  const revision = authRevision.current
+
+  apiFetch('/api/auth/me')
+    .then((response) => {
+      if (active && revision === authRevision.current) {
+        setAccountStatus(response.ok ? 'signed-in' : 'signed-out')
+      }
+    })
+    .catch(() => {
+      if (active && revision === authRevision.current) {
+        setAccountStatus('signed-out')
+      }
+    })
+
+  return () => {
+    active = false
+  }
+}, [])
+ useEffect(() => {
+  function syncView() {
+    const nextView = viewFromHash()
+
+    if (
+      nextView === 'reset' &&
+      window.location.hash.startsWith('#reset-password=')
+    ) {
+      setResetToken(resetTokenFromHash())
+      setRecoveryEntry((entry) => entry + 1)
+
+      // Keep the token in memory and remove it from the address bar.
+      window.history.replaceState(
+        window.history.state,
+        '',
+        window.location.pathname +
+          window.location.search +
+          '#reset-password'
+      )
+    } else if (nextView !== 'reset') {
+      setResetToken('')
     }
-  }, [])
-  useEffect(() => {
-    function syncView() {
-      setView(viewFromHash())
-    }
-    window.addEventListener('hashchange', syncView)
-    return () => window.removeEventListener('hashchange', syncView)
-  }, [])
-  function handleAuthenticated() {
+
+    setView(nextView)
+  }
+
+  syncView()
+  window.addEventListener('hashchange', syncView)
+
+  return () => {
+    window.removeEventListener('hashchange', syncView)
+  }
+}, [])
+    function handleAuthenticated() {
+  authRevision.current += 1
     setAccountStatus('signed-in')
     const returningToArchive = window.location.hash === '#my-reviews'
     if (returningToArchive) {
@@ -232,6 +279,29 @@ function App() {
       })
     })
   }
+  if (view === 'forgot' || view === 'reset') {
+  return (
+    <PasswordRecovery
+      key={`${view}-${recoveryEntry}`}
+      mode={view === 'reset' ? 'reset' : 'forgot'}
+      resetToken={resetToken}
+      onCompleted={() => {
+        authRevision.current += 1
+        setAccountStatus('signed-out')
+        setResetToken('')
+        setReview(null)
+        setReviewedFiles(null)
+        setReviewChecklist({ verified: {}, notes: '' })
+        setAiSession({
+          agreementData: null,
+          sowData: null,
+          progress: '',
+          error: '',
+        })
+      }}
+    />
+  )
+}
   if (accountStatus === 'checking' && view !== 'site') {
     return <main className="auth-page" aria-live="polite">Checking session…</main>
   }

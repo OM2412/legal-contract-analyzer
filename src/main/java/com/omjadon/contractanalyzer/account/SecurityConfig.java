@@ -7,12 +7,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
@@ -25,10 +25,7 @@ public class SecurityConfig {
     @Bean
     UserDetailsService userDetailsService(AppUserRepository users) {
         return email -> users.findByEmailIgnoreCase(email)
-                .map(user -> User.withUsername(user.email())
-                        .password(user.passwordHash())
-                        .roles("USER")
-                        .build())
+                .map(AccountPrincipal::new)
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "Account not found"
                 ));
@@ -38,7 +35,8 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             UserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            AppUserRepository users
     ) throws Exception {
         DaoAuthenticationProvider provider =
                 new DaoAuthenticationProvider(userDetailsService);
@@ -57,7 +55,9 @@ public class SecurityConfig {
                 ).permitAll()
                 .requestMatchers(
                         HttpMethod.POST,
-                        "/api/auth/register"
+                        "/api/auth/register",
+                        "/api/auth/forgot-password",
+                        "/api/auth/reset-password"
                 ).permitAll()
                 .anyRequest().authenticated()
         );
@@ -73,6 +73,8 @@ public class SecurityConfig {
                 .successHandler((request, response, authentication) -> {
                     response.setStatus(HttpServletResponse.SC_OK);
                     response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.setHeader("Cache-Control", "no-store");
                     response.getWriter().write(
                             "{\"status\":\"AUTHENTICATED\"}"
                     );
@@ -100,6 +102,11 @@ public class SecurityConfig {
                                 HttpServletResponse.SC_UNAUTHORIZED
                         )
                 )
+        );
+
+        http.addFilterAfter(
+                new CredentialVersionFilter(users),
+                AnonymousAuthenticationFilter.class
         );
 
         return http.build();

@@ -1,0 +1,250 @@
+{
+  "runId": "e8d3245c-7f3f-4f06-a992-bd1a4793cc4d",
+  "startedAt": "2026-10-13T23:46:54.766Z",
+  "finishedAt": "2026-10-13T23:47:01.666Z",
+  "baseUrl": "http://127.0.0.1:8081",
+  "fixtureVersions": {
+    "agreement": "sha256:285ca7acbb8e791c4b0dd5d5bdc74c03ddb056ac89e36e9be572c555178a6f73",
+    "sow": "sha256:c971cc96352c3f390df0c746cb83bf6cf96a85983c53ad3028b5208cca5b692a"
+  },
+  "savedReviewId": "bba626d6-286a-4920-89a7-065f90e97b53",
+  "checksRun": 38,
+  "passed": 38,
+  "failed": 0,
+  "completed": true,
+  "failure": null,
+  "cases": [
+    {
+      "name": "Anonymous profile denied",
+      "expected": 401,
+      "actual": 401,
+      "passed": true
+    },
+    {
+      "name": "Anonymous review list denied",
+      "expected": 401,
+      "actual": 401,
+      "passed": true
+    },
+    {
+      "name": "Registration without CSRF denied",
+      "expected": [
+        401,
+        403
+      ],
+      "actual": 401,
+      "passed": true
+    },
+    {
+      "name": "Register A",
+      "expected": 201,
+      "actual": 201,
+      "passed": true
+    },
+    {
+      "name": "Duplicate email rejected",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "name": "Invalid login denied",
+      "expected": 401,
+      "actual": 401,
+      "passed": true
+    },
+    {
+      "name": "Login A",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "name": "Authenticated profile A",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "name": "Profile A identity",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "name": "Register B",
+      "expected": 201,
+      "actual": 201,
+      "passed": true
+    },
+    {
+      "name": "Login B",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "name": "Authenticated profile B",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "name": "Independent account identities",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "name": "Upload without CSRF denied",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "name": "Upload with invalid CSRF denied",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "name": "Authenticated upload succeeds",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "name": "Agreement source version",
+      "expected": "sha256:285ca7acbb8e791c4b0dd5d5bdc74c03ddb056ac89e36e9be572c555178a6f73",
+      "actual": "sha256:285ca7acbb8e791c4b0dd5d5bdc74c03ddb056ac89e36e9be572c555178a6f73",
+      "passed": true
+    },
+    {
+      "name": "SOW source version",
+      "expected": "sha256:c971cc96352c3f390df0c746cb83bf6cf96a85983c53ad3028b5208cca5b692a",
+      "actual": "sha256:c971cc96352c3f390df0c746cb83bf6cf96a85983c53ad3028b5208cca5b692a",
+      "passed": true
+    },
+    {
+      "name": "Multiple-clause review status",
+      "expected": "REVIEW_REQUIRED",
+      "actual": "REVIEW_REQUIRED",
+      "passed": true
+    },
+    {
+      "name": "Agreement match count",
+      "expected": 1,
+      "actual": 1,
+      "passed": true
+    },
+    {
+      "name": "SOW match count",
+      "expected": 2,
+      "actual": 2,
+      "passed": true
+    },
+    {
+      "name": "Save computed review",
+      "expected": 201,
+      "actual": 201,
+      "passed": true
+    },
+    {
+      "name": "Saved review has UUID",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "name": "Owner reads saved review",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "name": "Saved Agreement version preserved",
+      "expected": "sha256:285ca7acbb8e791c4b0dd5d5bdc74c03ddb056ac89e36e9be572c555178a6f73",
+      "actual": "sha256:285ca7acbb8e791c4b0dd5d5bdc74c03ddb056ac89e36e9be572c555178a6f73",
+      "passed": true
+    },
+    {
+      "name": "Saved SOW version preserved",
+      "expected": "sha256:c971cc96352c3f390df0c746cb83bf6cf96a85983c53ad3028b5208cca5b692a",
+      "actual": "sha256:c971cc96352c3f390df0c746cb83bf6cf96a85983c53ad3028b5208cca5b692a",
+      "passed": true
+    },
+    {
+      "name": "Saved status preserved",
+      "expected": "REVIEW_REQUIRED",
+      "actual": "REVIEW_REQUIRED",
+      "passed": true
+    },
+    {
+      "name": "Owner list succeeds",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "name": "Owner list includes review",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "name": "Other user cannot read owner review",
+      "expected": 404,
+      "actual": 404,
+      "passed": true
+    },
+    {
+      "name": "Other user list succeeds",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "name": "Other user list excludes owner review",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "name": "Anonymous saved-review access denied",
+      "expected": 401,
+      "actual": 401,
+      "passed": true
+    },
+    {
+      "name": "Unknown review returns 404",
+      "expected": 404,
+      "actual": 404,
+      "passed": true
+    },
+    {
+      "name": "Logout without CSRF denied",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "name": "Valid logout succeeds",
+      "expected": 204,
+      "actual": 204,
+      "passed": true
+    },
+    {
+      "name": "Profile denied after logout",
+      "expected": 401,
+      "actual": 401,
+      "passed": true
+    },
+    {
+      "name": "Saved review denied after logout",
+      "expected": 401,
+      "actual": 401,
+      "passed": true
+    }
+  ],
+  "note": "Live local API checks, not a penetration test. Generated test accounts and a synthetic review may remain in the local database. No passwords, cookies or tokens are stored in this report."
+}
