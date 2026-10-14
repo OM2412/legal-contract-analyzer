@@ -1,0 +1,10 @@
+{
+  "runId": "2d2ef60c-bdbc-4734-bfe7-34afd9bc87b8",
+  "email": "recovery-restart-2d2ef60c-bdbc-4734-bfe7-34afd9bc87b8@example.test",
+  "jobId": "5249fc24-efc2-411a-992c-6991247e06a1",
+  "preparedAt": "2026-10-14T20:58:51.774Z",
+  "stateBeforeRestart": "PENDING",
+  "attemptsBeforeRestart": 0,
+  "completed": false,
+  "note": "Preparation checkpoint only; restart delivery is not verified yet."
+}

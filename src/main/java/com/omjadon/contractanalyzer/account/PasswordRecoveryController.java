@@ -22,18 +22,18 @@ public class PasswordRecoveryController {
     private final PasswordResetService resets;
     private final PasswordResetMailSender mailSender;
     private final PasswordRecoveryRateLimiter limiter;
-    private final PasswordRecoveryDispatcher dispatcher;
+    private final PasswordRecoveryJobStore jobs;
 
     public PasswordRecoveryController(
             PasswordResetService resets,
             PasswordResetMailSender mailSender,
             PasswordRecoveryRateLimiter limiter,
-            PasswordRecoveryDispatcher dispatcher
+            PasswordRecoveryJobStore jobs
     ) {
         this.resets = resets;
         this.mailSender = mailSender;
         this.limiter = limiter;
-        this.dispatcher = dispatcher;
+        this.jobs = jobs;
     }
 
     @PostMapping("/forgot-password")
@@ -52,7 +52,7 @@ public class PasswordRecoveryController {
             return unavailableResponse();
         }
 
-        if (!dispatcher.submit(body.email())) {
+        if (!jobs.enqueue(body.email())) {
             return ResponseEntity
                     .status(HttpStatus.SERVICE_UNAVAILABLE)
                     .cacheControl(CacheControl.noStore())

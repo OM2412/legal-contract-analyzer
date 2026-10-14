@@ -1,0 +1,65 @@
+{
+  "runId": "2d2ef60c-bdbc-4734-bfe7-34afd9bc87b8",
+  "startedAt": "2026-10-14T21:01:21.664Z",
+  "method": "Pending database job processed after backend restart; no new reset request",
+  "completed": true,
+  "checks": [
+    {
+      "name": "Checkpoint recorded pending job",
+      "actual": "PENDING",
+      "expected": "PENDING",
+      "passed": true
+    },
+    {
+      "name": "Checkpoint recorded zero attempts",
+      "actual": 0,
+      "expected": 0,
+      "passed": true
+    },
+    {
+      "name": "Same persisted job completed",
+      "actual": "COMPLETED",
+      "expected": "COMPLETED",
+      "passed": true
+    },
+    {
+      "name": "Job belongs to dedicated test account",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Job completed on first attempt",
+      "actual": 1,
+      "expected": 1,
+      "passed": true
+    },
+    {
+      "name": "Completion timestamp recorded",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Worker lease released",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Reset email delivered after restart",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Delivered email contains a reset link",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    }
+  ],
+  "finishedAt": "2026-10-14T21:01:22.849Z",
+  "total": 9,
+  "passed": 9
+}
