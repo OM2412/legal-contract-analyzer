@@ -225,6 +225,7 @@ function ReviewResult({
   files,
   checklist,
   onChecklistChange,
+  panel = 'all',
 }) {
   const [selectedEvidence, setSelectedEvidence] = useState(null)
 
@@ -249,7 +250,7 @@ function ReviewResult({
   return (
     <>
       <section
-        className="review-result-section section-spacing"
+       className={`review-result-section section-spacing${panel === 'risks' ? ' app-result-panel--hidden' : ''}`}
         id="review-result"
         aria-labelledby="result-heading"
         tabIndex="-1"
@@ -381,11 +382,19 @@ function ReviewResult({
         </div>
       </section>
 
-      <RiskStudio
-        data={data}
-        files={files}
-        onInspect={inspect}
-      />
+     <div
+  className={
+    panel === 'review'
+      ? 'app-result-panel--hidden'
+      : undefined
+  }
+>
+  <RiskStudio
+    data={data}
+    files={files}
+    onInspect={inspect}
+  />
+</div>
 
       {selectedEvidence && (
         <EvidenceLens
