@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +20,9 @@ public class SavedReviewController {
 
     private final SavedReviewService savedReviews;
 
-    public SavedReviewController(SavedReviewService savedReviews) {
+    public SavedReviewController(
+            SavedReviewService savedReviews
+    ) {
         this.savedReviews = savedReviews;
     }
 
@@ -48,6 +52,26 @@ public class SavedReviewController {
                         HttpStatus.NOT_FOUND,
                         "Review not found"
                 ));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(
+            Authentication authentication,
+            @PathVariable("id") UUID id
+    ) {
+        boolean deleted = savedReviews.delete(
+                authentication,
+                id
+        );
+
+        if (!deleted) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Review not found"
+            );
+        }
+
+        return ResponseEntity.noContent().build();
     }
 
     public record ReviewPage(

@@ -6,8 +6,11 @@ import AiStudio from './AiStudio'
 import AuthPage from './AuthPage'
 import SavedReviews from './SavedReviews'
 import PasswordRecovery from './PasswordRecovery'
+import ReviewLimitations from './ReviewLimitations'
+import PrivacyPage from './PrivacyPage'
 import { FolioIcon, MoonLoader } from './components/FolioUI'
 import { apiFetch } from './apiClient'
+
 import './App.css'
 import './SavedReviews.css'
 import './AppNavigation.css'
@@ -60,6 +63,9 @@ function viewFromHash() {
   if (AI_ENABLED && hash === '#ai-studio') {
     return 'ai-studio'
   }
+
+  if (hash === '#review-limitations') return 'limitations'
+  if (hash === '#privacy') return 'privacy'
 
   return 'site'
 }
@@ -122,7 +128,7 @@ function WorkspaceFrame({ view, children }) {
 
           <a className="app-frame__home" href="#top">
             Home
-            <FolioIcon size={17} />
+            <FolioIcon name="arrow" size={17} />
           </a>
         </div>
       </header>
@@ -180,7 +186,7 @@ function ReviewEmptyState({ ai = false }) {
       <div className="app-frame__empty-actions">
         <a className="button button-lime" href="#workspace">
           Open workspace
-          <FolioIcon />
+          <FolioIcon name="arrow" />
         </a>
 
         <a
@@ -202,13 +208,8 @@ function App() {
     useState(emptyChecklist)
 
   const [view, setView] = useState(viewFromHash)
-
-  const [accountStatus, setAccountStatus] =
-    useState('checking')
-
-  const [resetToken, setResetToken] =
-    useState(resetTokenFromHash)
-
+  const [accountStatus, setAccountStatus] = useState('checking')
+  const [resetToken, setResetToken] = useState(resetTokenFromHash)
   const [recoveryEntry, setRecoveryEntry] = useState(0)
 
   const authRevision = useRef(0)
@@ -262,7 +263,6 @@ function App() {
     }
 
     syncView()
-
     window.addEventListener('hashchange', syncView)
 
     return () => {
@@ -342,6 +342,18 @@ function App() {
           setAiSession(emptyAi())
         }}
       />
+    )
+  }
+
+  if (view === 'limitations') {
+    return (
+      <ReviewLimitations accountStatus={accountStatus} />
+    )
+  }
+
+  if (view === 'privacy') {
+    return (
+      <PrivacyPage accountStatus={accountStatus} />
     )
   }
 

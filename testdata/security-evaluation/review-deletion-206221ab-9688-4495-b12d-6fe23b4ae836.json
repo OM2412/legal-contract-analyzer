@@ -1,0 +1,193 @@
+{
+  "runId": "206221ab-9688-4495-b12d-6fe23b4ae836",
+  "startedAt": "2026-10-14T23:31:20.158Z",
+  "finishedAt": "2026-10-14T23:31:28.099Z",
+  "baseUrl": "http://127.0.0.1:8081",
+  "completed": true,
+  "totalChecks": 30,
+  "passedChecks": 30,
+  "failure": null,
+  "checks": [
+    {
+      "name": "Register A",
+      "actual": 201,
+      "expected": 201,
+      "passed": true
+    },
+    {
+      "name": "Login A",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Register B",
+      "actual": 201,
+      "expected": 201,
+      "passed": true
+    },
+    {
+      "name": "Login B",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Save owner target",
+      "actual": 201,
+      "expected": 201,
+      "passed": true
+    },
+    {
+      "name": "owner target has UUID",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Save owner control",
+      "actual": 201,
+      "expected": 201,
+      "passed": true
+    },
+    {
+      "name": "owner control has UUID",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Save other user control",
+      "actual": 201,
+      "expected": 201,
+      "passed": true
+    },
+    {
+      "name": "other user control has UUID",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Owner reads target before deletion",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Anonymous DELETE with CSRF denied",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Target survives anonymous DELETE",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Owner DELETE without CSRF denied",
+      "actual": 403,
+      "expected": 403,
+      "passed": true
+    },
+    {
+      "name": "Owner DELETE with invalid CSRF denied",
+      "actual": 403,
+      "expected": 403,
+      "passed": true
+    },
+    {
+      "name": "Target survives rejected CSRF requests",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Other account cannot delete owner review",
+      "actual": 404,
+      "expected": 404,
+      "passed": true
+    },
+    {
+      "name": "Target survives other-account DELETE",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Unknown review DELETE returns 404",
+      "actual": 404,
+      "expected": 404,
+      "passed": true
+    },
+    {
+      "name": "Owner deletes target",
+      "actual": 204,
+      "expected": 204,
+      "passed": true
+    },
+    {
+      "name": "Deleted target cannot be opened",
+      "actual": 404,
+      "expected": 404,
+      "passed": true
+    },
+    {
+      "name": "Repeated deletion returns 404",
+      "actual": 404,
+      "expected": 404,
+      "passed": true
+    },
+    {
+      "name": "Owner archive loads",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Owner archive excludes deleted target",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Owner control review remains",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Other account control remains",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Owner cannot delete other account control",
+      "actual": 404,
+      "expected": 404,
+      "passed": true
+    },
+    {
+      "name": "Other account control survives",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Clean up owner test control",
+      "actual": 204,
+      "expected": 204,
+      "passed": true
+    },
+    {
+      "name": "Clean up other test control",
+      "actual": 204,
+      "expected": 204,
+      "passed": true
+    }
+  ],
+  "note": "Dedicated local test accounts and synthetic documents. Test accounts remain; test reviews are removed on a successful run. Passwords, session cookies and CSRF tokens are not recorded."
+}

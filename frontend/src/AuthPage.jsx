@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './AuthPage.css'
 import { apiFetch } from './apiClient'
+import { FolioButton } from './components/FolioUI'
 
 async function errorMessage(response, fallback) {
   const data = await response.json().catch(() => null)
@@ -189,18 +190,14 @@ function AuthPage({ onAuthenticated }) {
               </p>
             )}
 
-            <button
-              className="auth-submit"
-              type="submit"
-              disabled={busy}
-            >
-              {busy
-                ? 'Please wait…'
-                : registering
-                  ? 'Create account'
-                  : 'Sign in'}
-              <span aria-hidden="true">↗</span>
-            </button>
+            <FolioButton
+  type="submit"
+  loading={busy}
+  loadingLabel={registering ? 'Creating account...' : 'Signing in...'}
+  icon="arrow"
+>
+  {registering ? 'Create account' : 'Sign in'}
+</FolioButton>
           </form>
 {!registering && (
   <div className="auth-recovery-links">

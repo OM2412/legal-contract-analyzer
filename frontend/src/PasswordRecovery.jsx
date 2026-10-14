@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { apiFetch } from './apiClient'
 import './AuthPage.css'
-
+import { FolioButton } from './components/FolioUI'
 function PasswordRecovery({
   mode = 'forgot',
   resetToken = '',
@@ -243,18 +243,14 @@ function PasswordRecovery({
                 </p>
               )}
 
-              <button
-                className="auth-submit"
-                type="submit"
-                disabled={busy}
-              >
-                {busy
-                  ? 'Please wait...'
-                  : resetting
-                    ? 'Update password'
-                    : 'Send reset link'}
-                <span aria-hidden="true">&#8599;</span>
-              </button>
+              <FolioButton
+  type="submit"
+  loading={busy}
+  loadingLabel={resetting ? 'Updating password...' : 'Sending reset link...'}
+  icon={resetting ? 'shield' : 'arrow'}
+>
+  {resetting ? 'Update password' : 'Send reset link'}
+</FolioButton>
             </form>
           )}
 

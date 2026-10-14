@@ -1,0 +1,170 @@
+.fui-button {
+  --fui-ink: #17213b;
+  --fui-lime: #d4ff62;
+
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 54px;
+  padding: 12px 19px;
+  border: 2px solid var(--fui-ink);
+  border-radius: 13px;
+  background: var(--fui-lime);
+  color: var(--fui-ink);
+  box-shadow: 4px 4px 0 var(--fui-ink);
+  font: inherit;
+  font-weight: 750;
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.fui-button--secondary {
+  background: #eee7ff;
+}
+
+.fui-button--ghost {
+  background: #fffdf8;
+  box-shadow: none;
+}
+
+.fui-button:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--fui-ink);
+}
+
+.fui-button:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--fui-ink);
+}
+
+.fui-button:focus-visible {
+  outline: 3px solid #5146a5;
+  outline-offset: 6px;
+}
+
+.fui-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.fui-button[aria-busy="true"] {
+  opacity: 1;
+  cursor: wait;
+}
+
+/* Reserve space for both labels to prevent loading-width jumps. */
+.fui-button__label {
+  display: grid;
+  min-width: 0;
+}
+
+.fui-button__label > span {
+  grid-area: 1 / 1;
+}
+
+.fui-button__label > [aria-hidden="true"] {
+  visibility: hidden;
+}
+
+.fui-button__symbol {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.fui-icon {
+  display: block;
+  flex: none;
+}
+
+.fui-moon {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+
+.fui-moon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.fui-moon__orbit {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  opacity: 0.45;
+}
+
+.fui-moon__body {
+  fill: #fffdf8;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.fui-moon__crater {
+  fill: currentColor;
+  opacity: 0.22;
+}
+
+.fui-moon__satellite {
+  fill: currentColor;
+  transform-origin: 24px 24px;
+  animation: fui-orbit 1.4s linear infinite;
+}
+
+.fui-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes fui-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fui-moon__satellite {
+    animation: none;
+  }
+
+  .fui-button {
+    transition: none;
+  }
+
+  .fui-button:hover:not(:disabled),
+  .fui-button:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .fui-button {
+    border-color: ButtonText;
+    box-shadow: none;
+  }
+
+  .fui-moon__body {
+    fill: Canvas;
+  }
+}

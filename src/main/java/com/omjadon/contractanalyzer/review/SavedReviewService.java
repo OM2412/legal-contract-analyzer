@@ -97,7 +97,18 @@ public class SavedReviewService {
                         new LinkedHashMap<>(saved.resultJson())
                 ));
     }
+    @Transactional
+    public boolean delete(
+            Authentication authentication,
+            UUID reviewId
+    ) {
+        UUID ownerId = currentUser(authentication).id();
 
+        return reviews.deleteOwnedReview(
+                reviewId,
+                ownerId
+        ) == 1;
+    }
     private AppUser currentUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
