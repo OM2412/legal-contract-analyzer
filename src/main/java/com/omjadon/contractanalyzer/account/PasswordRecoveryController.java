@@ -2,8 +2,6 @@ package com.omjadon.contractanalyzer.account;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 public class PasswordRecoveryController {
 
-    private static final Logger LOG =
-            LoggerFactory.getLogger(PasswordRecoveryController.class);
-
     private static final String ACKNOWLEDGEMENT =
             "If an account exists for this email, "
                     + "a password reset link will be sent.";
@@ -27,15 +22,18 @@ public class PasswordRecoveryController {
     private final PasswordResetService resets;
     private final PasswordResetMailSender mailSender;
     private final PasswordRecoveryRateLimiter limiter;
+    private final PasswordRecoveryDispatcher dispatcher;
 
     public PasswordRecoveryController(
             PasswordResetService resets,
             PasswordResetMailSender mailSender,
-            PasswordRecoveryRateLimiter limiter
+            PasswordRecoveryRateLimiter limiter,
+            PasswordRecoveryDispatcher dispatcher
     ) {
         this.resets = resets;
         this.mailSender = mailSender;
         this.limiter = limiter;
+        this.dispatcher = dispatcher;
     }
 
     @PostMapping("/forgot-password")
@@ -43,27 +41,26 @@ public class PasswordRecoveryController {
             @RequestBody ForgotPasswordRequest body,
             HttpServletRequest request
     ) {
-        String email = body.email();
-
-        if (!limiter.allowRequest(request.getRemoteAddr(), email)) {
+        if (!limiter.allowRequest(
+                request.getRemoteAddr(),
+                body.email()
+        )) {
             return rateLimited();
         }
 
-        // Check configuration before looking up an account.
         if (!mailSender.isAvailable()) {
-            return response(
-                    HttpStatus.SERVICE_UNAVAILABLE,
-                    "error",
-                    "Password recovery is currently unavailable"
-            );
+            return unavailableResponse();
         }
 
-        try {
-            resets.requestReset(email);
-        } catch (IllegalStateException error) {
-            // Keep the public acknowledgement unchanged on a
-            // delivery failure. Never log the email or reset token.
-            LOG.warn("Password recovery delivery failed");
+        if (!dispatcher.submit(body.email())) {
+            return ResponseEntity
+                    .status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .cacheControl(CacheControl.noStore())
+                    .header("Retry-After", "60")
+                    .body(Map.of(
+                            "error",
+                            "Password recovery is busy. Please try again later."
+                    ));
         }
 
         return response(
@@ -106,6 +103,10 @@ public class PasswordRecoveryController {
     public ResponseEntity<Map<String, String>> unavailable(
             IllegalStateException error
     ) {
+        return unavailableResponse();
+    }
+
+    private static ResponseEntity<Map<String, String>> unavailableResponse() {
         return response(
                 HttpStatus.SERVICE_UNAVAILABLE,
                 "error",

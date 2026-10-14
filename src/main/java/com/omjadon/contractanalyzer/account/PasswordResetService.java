@@ -140,7 +140,7 @@ public class PasswordResetService {
         tokens.deleteAllForUser(user.id());
     }
 
-    private static String normalizeEmail(String email) {
+  static String normalizeEmail(String email) {
         if (email == null) {
             throw new IllegalArgumentException(
                     "Enter a valid email address"
