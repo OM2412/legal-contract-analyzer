@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
@@ -36,12 +37,13 @@ public class SecurityConfig {
             HttpSecurity http,
             UserDetailsService userDetailsService,
             PasswordEncoder passwordEncoder,
-            AppUserRepository users
+            AppUserRepository users,
+            AuthAttemptRateLimiter authAttemptRateLimiter
     ) throws Exception {
         DaoAuthenticationProvider provider =
                 new DaoAuthenticationProvider(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder);
 
+        provider.setPasswordEncoder(passwordEncoder);
         http.authenticationProvider(provider);
 
         http.authorizeHttpRequests(authorize -> authorize
@@ -107,6 +109,13 @@ public class SecurityConfig {
         http.addFilterAfter(
                 new CredentialVersionFilter(users),
                 AnonymousAuthenticationFilter.class
+        );
+
+        http.addFilterBefore(
+                new AuthAttemptRateLimitFilter(
+                        authAttemptRateLimiter
+                ),
+                UsernamePasswordAuthenticationFilter.class
         );
 
         return http.build();
