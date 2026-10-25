@@ -10,3 +10,6 @@ Thumbs.db
 /private-documents/
 /uploads/
 /reports/
+.neon
+.env.local
+node_modules/

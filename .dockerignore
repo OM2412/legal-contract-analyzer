@@ -15,3 +15,7 @@ frontend/.env.*
 *.log
 *.tmp
 .DS_Store
+# Local Neon tooling
+.neon
+.agents/
+node_modules/
