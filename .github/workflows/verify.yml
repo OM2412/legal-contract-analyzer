@@ -1,0 +1,93 @@
+name: Verify Folio
+
+on:
+  pull_request:
+    branches: [main, feature/accounts-and-saved-reviews]
+  push:
+    branches: [main, feature/accounts-and-saved-reviews, 'security/**']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: folio_ci
+          POSTGRES_USER: folio_ci
+          # Disposable CI service only. Never use this credential in a deployment.
+          POSTGRES_PASSWORD: ephemeral-ci-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U folio_ci -d folio_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Install OCR dependency
+        run: sudo apt-get update && sudo apt-get install -y tesseract-ocr tesseract-ocr-eng
+      - name: Frontend tests, lint and production build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm test
+          npm run lint
+          npm run build
+      - name: Validate frozen pilot sources and archived response evidence
+        run: |
+          node scripts/validate-product-labels.mjs testdata/product-evaluation/heldout/labels.json
+          node scripts/score-product-review.mjs testdata/product-evaluation/heldout/labels.json testdata/product-evaluation/pilot-output
+      - name: Backend tests and executable package
+        env:
+          FOLIO_REQUIRE_OCR_TESTS: 'true'
+        run: mvn -B verify
+      - name: Verify account isolation, deletion and upload boundaries on disposable database
+        env:
+          SPRING_PROFILES_ACTIVE: db
+          FOLIO_DB_JDBC_URL: jdbc:postgresql://127.0.0.1:5432/folio_ci
+          FOLIO_DB_USER: folio_ci
+          FOLIO_DB_PASSWORD: ephemeral-ci-only-password
+          FOLIO_AI_ENABLED: 'false'
+          FOLIO_DEMO_AUTH_ENABLED: 'false'
+          FOLIO_PASSWORD_RESET_ENABLED: 'false'
+          FOLIO_PASSWORD_RECOVERY_WORKER_ENABLED: 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          start_app() {
+            java -jar target/legal-contract-analyzer-0.1.0-SNAPSHOT-exec.jar --server.port=8081 > "$RUNNER_TEMP/folio-ci.log" 2>&1 &
+            app_pid=$!
+            for attempt in {1..90}; do
+              if curl --fail --silent http://127.0.0.1:8081/api/auth/csrf > /dev/null; then return; fi
+              if ! kill -0 "$app_pid" 2>/dev/null; then cat "$RUNNER_TEMP/folio-ci.log"; return 1; fi
+              sleep 1
+            done
+            cat "$RUNNER_TEMP/folio-ci.log"
+            return 1
+          }
+          trap 'kill "$app_pid" 2>/dev/null || true' EXIT
+          start_app
+          node scripts/check-account-security.mjs http://127.0.0.1:8081
+          node scripts/check-review-deletion.mjs http://127.0.0.1:8081
+          node scripts/check-upload-validation.mjs http://127.0.0.1:8081
+          # Rate-limit assertions require fresh in-memory counters.
+          kill "$app_pid"
+          wait "$app_pid" || true
+          start_app
+          node scripts/check-auth-rate-limits.mjs http://127.0.0.1:8081

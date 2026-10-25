@@ -418,7 +418,12 @@ findings.addAll(
             Exception error
     ) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", error.getMessage()));
+                .cacheControl(org.springframework.http.CacheControl.noStore())
+                .body(Map.of(
+                        "error",
+                        "Documents could not be processed. Check the file "
+                                + "format, contents and upload limits, then retry."
+                ));
     }
     @ExceptionHandler(RestClientException.class)
     public ResponseEntity<Map<String, String>> ollamaUnavailable(
