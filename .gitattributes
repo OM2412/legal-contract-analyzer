@@ -1,0 +1,2 @@
+# Frozen evaluation sources are identified by exact bytes, including BOM/newlines.
+/testdata/product-evaluation/heldout/*.txt -text whitespace=cr-at-eol

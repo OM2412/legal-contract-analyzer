@@ -23,6 +23,7 @@ RUN apt-get update \
 
 WORKDIR /app
 ENV FOLIO_AI_ENABLED=false
+ENV FOLIO_REQUIRE_OCR_TESTS=true
 
 COPY pom.xml ./
 COPY src ./src

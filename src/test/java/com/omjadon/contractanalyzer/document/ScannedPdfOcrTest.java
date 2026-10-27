@@ -120,13 +120,40 @@ assertEquals(Set.of(2), document.ocrPages());
         assertEquals(2, pages.lastPage());
     }
 
-    private static void requireTesseract() {
-        Assumptions.assumeTrue(
-                Files.isRegularFile(Path.of(
-                        "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
-                )),
-                "Local OCR integration test requires Tesseract"
-        );
+    private static void requireTesseract() throws Exception {
+        String executable = System.getenv("TESSERACT_PATH");
+        if (executable == null || executable.isBlank()) {
+            Path windows = Path.of(
+                    "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
+            );
+            executable = Files.isRegularFile(windows)
+                    ? windows.toString() : "tesseract";
+        }
+        boolean available = false;
+        try {
+            Process process = new ProcessBuilder(executable, "--list-langs")
+                    .redirectErrorStream(true).start();
+            boolean completed = process.waitFor(
+                    5, java.util.concurrent.TimeUnit.SECONDS
+            );
+            if (!completed) {
+                process.destroyForcibly();
+            } else if (process.exitValue() == 0) {
+                String languages = new String(
+                        process.getInputStream().readAllBytes(),
+                        java.nio.charset.StandardCharsets.UTF_8
+                );
+                available = languages.lines()
+                        .anyMatch(line -> line.strip().equals("eng"));
+            }
+        } catch (java.io.IOException unavailable) {
+            // Local installs may omit OCR; CI and Docker builds must not.
+        }
+        if ("true".equalsIgnoreCase(System.getenv("FOLIO_REQUIRE_OCR_TESTS"))) {
+            assertTrue(available, "Required OCR tests need Tesseract English data");
+        } else {
+            Assumptions.assumeTrue(available, "OCR tests require Tesseract English data");
+        }
     }
 
     private static void addImagePage(
