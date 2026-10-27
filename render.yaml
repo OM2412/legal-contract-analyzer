@@ -7,7 +7,7 @@ services:
     dockerContext: .
     envVars:
       - key: FOLIO_DEMO_AUTH_ENABLED
-        value: "true"
+        value: "false"
       - key: FOLIO_DEMO_USERNAME
         value: mentor
       - key: FOLIO_DEMO_PASSWORD
