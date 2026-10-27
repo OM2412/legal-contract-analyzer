@@ -15,6 +15,62 @@ A local Java application that reviews payment terms in a software services Agree
 
 The rule-based review and AI suggestions are shown separately. AI suggestions do not change the review verdict automatically.
 
+## Render deployment
+
+The repository currently contains three branches with different purposes:
+
+| Branch | Purpose | Deployment notes |
+| --- | --- | --- |
+| `main` | Stable local/demo application | Uses `render.yaml`; it does not configure the external database profile. |
+| `feature/accounts-and-saved-reviews` | Accounts, sessions, saved reviews, and Neon PostgreSQL preview | Uses `render.accounts.yaml` and is the branch used by `folio-accounts-preview`. |
+| `security/release-hardening-01` | Release-security verification and hardening work | Review and validate this branch before promoting it to the preview or stable deployment. |
+
+### Deploy the accounts preview
+
+Create or update a Render Docker Web Service with:
+
+- Repository: `OM2412/legal-contract-analyzer`
+- Branch: `feature/accounts-and-saved-reviews`
+- Dockerfile: `./Dockerfile`
+- Docker context: `.`
+- Health-check path: `/`
+- Region: Singapore (or the region nearest the database)
+
+Set these environment variables in the Render Dashboard. Never commit their values:
+
+```text
+SPRING_PROFILES_ACTIVE=db
+FOLIO_DB_URL=postgresql://<user>:<password>@<host>/<database>?sslmode=require
+FOLIO_DB_USER=<database-user>
+FOLIO_DB_PASSWORD=<database-password>
+FOLIO_DEMO_AUTH_ENABLED=false
+FOLIO_DEMO_USERNAME=mentor
+FOLIO_DEMO_PASSWORD=<optional-unused-demo-gate-password>
+FOLIO_AI_ENABLED=false
+FOLIO_PASSWORD_RESET_ENABLED=false
+FOLIO_PASSWORD_RECOVERY_WORKER_ENABLED=false
+SERVER_SERVLET_SESSION_COOKIE_SECURE=true
+SERVER_SERVLET_SESSION_COOKIE_HTTP_ONLY=true
+SERVER_SERVLET_SESSION_COOKIE_SAME_SITE=lax
+```
+
+`FOLIO_DEMO_AUTH_ENABLED` must be `false` for a normal public website preview. When it is `true`, `DemoAccessFilter` rejects every request without HTTP Basic credentials, including `/`; the React login page cannot load and the service returns `401 Unauthorized`. This outer demo gate is separate from the application's account login. The application still protects authenticated API routes through Spring Security.
+
+After changing environment variables or pushing a deployment commit:
+
+1. Save the variables and trigger **Manual Deploy > Deploy latest commit**.
+2. Wait for Render to show the service as **Live**.
+3. Check the root response:
+
+   ```powershell
+   curl.exe -i https://<service-name>.onrender.com/
+   ```
+
+   A healthy public preview returns `200 OK`. A `401` response containing `WWW-Authenticate: Basic realm="Folio Demo"` means the outer demo gate is still enabled in Render or the service has not redeployed.
+4. Open the root URL in a private browser window and test registration/login before testing protected review and saved-review routes.
+
+The Docker entrypoint validates `FOLIO_DB_URL`, derives the JDBC URL, binds Spring Boot to Render's `PORT`, and binds to `0.0.0.0`. If the service fails before responding, inspect the Render deploy logs for database URL format, Flyway migration, or missing environment-variable errors. Do not paste passwords, connection strings, cookies, or session values into issue reports.
+
 ## Requirements
 
 - Java 25

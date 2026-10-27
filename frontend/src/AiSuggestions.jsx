@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import AiComparison from './AiComparison'
-
+import { apiFetch } from './apiClient'
 async function requestSuggestions(file, signal) {
   const form = new FormData()
   form.append('document', file)
 
-  const response = await fetch('/api/ai/quotes', {
+ const response = await apiFetch('/api/ai/quotes', {
     method: 'POST',
     body: form,
     signal,

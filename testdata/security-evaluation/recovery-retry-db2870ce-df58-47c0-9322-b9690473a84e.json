@@ -1,0 +1,113 @@
+{
+  "runId": "db2870ce-df58-47c0-9322-b9690473a84e",
+  "startedAt": "2026-10-14T21:09:42.977Z",
+  "method": "Temporarily stop local Mailpit, observe persisted retry, restore SMTP",
+  "completed": true,
+  "checks": [
+    {
+      "name": "Mailpit initially running",
+      "actual": "true",
+      "expected": "true",
+      "passed": true
+    },
+    {
+      "name": "No other active recovery jobs before SMTP interruption",
+      "actual": "0",
+      "expected": "0",
+      "passed": true
+    },
+    {
+      "name": "Register dedicated retry account",
+      "actual": 201,
+      "expected": 201,
+      "passed": true
+    },
+    {
+      "name": "SMTP container stopped",
+      "actual": "false",
+      "expected": "false",
+      "passed": true
+    },
+    {
+      "name": "Request accepted while SMTP unavailable",
+      "actual": 202,
+      "expected": 202,
+      "passed": true
+    },
+    {
+      "name": "Failed delivery preserved as pending",
+      "actual": "PENDING",
+      "expected": "PENDING",
+      "passed": true
+    },
+    {
+      "name": "First delivery attempt recorded",
+      "actual": 1,
+      "expected": 1,
+      "passed": true
+    },
+    {
+      "name": "Retry scheduled for later",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Failed attempt released worker lease",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Failed email transaction left no reset token",
+      "actual": "0",
+      "expected": "0",
+      "passed": true
+    },
+    {
+      "name": "Persisted job eventually completed",
+      "actual": "COMPLETED",
+      "expected": "COMPLETED",
+      "passed": true
+    },
+    {
+      "name": "Successful delivery occurred on second attempt",
+      "actual": 2,
+      "expected": 2,
+      "passed": true
+    },
+    {
+      "name": "Completed job released worker lease",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Completion timestamp recorded",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Retry email received",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Retry email contains reset link",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Successful retry persisted one reset token",
+      "actual": "1",
+      "expected": "1",
+      "passed": true
+    }
+  ],
+  "finishedAt": "2026-10-14T21:10:23.350Z",
+  "total": 17,
+  "passed": 17
+}

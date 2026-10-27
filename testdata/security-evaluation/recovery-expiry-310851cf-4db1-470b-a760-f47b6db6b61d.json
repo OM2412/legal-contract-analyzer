@@ -1,0 +1,108 @@
+{
+  "runId": "310851cf-4db1-470b-a760-f47b6db6b61d",
+  "startedAt": "2026-10-14T20:38:15.036Z",
+  "baseUrl": "http://127.0.0.1:8081",
+  "method": "Controlled expiry of one dedicated test-account token in local PostgreSQL",
+  "completed": true,
+  "checks": [
+    {
+      "name": "Register dedicated expiry account",
+      "actual": 201,
+      "expected": 201,
+      "passed": true
+    },
+    {
+      "name": "Login before expiry test",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Session works before expiry test",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Test account identity",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "New account credential version",
+      "actual": "0",
+      "expected": "0",
+      "passed": true
+    },
+    {
+      "name": "Expiry test reset request accepted",
+      "actual": 202,
+      "expected": 202,
+      "passed": true
+    },
+    {
+      "name": "Reset email received",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Exactly one test token expired",
+      "actual": "1",
+      "expected": "1",
+      "passed": true
+    },
+    {
+      "name": "Expired token rejected by API",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Expired token receives safe error",
+      "actual": "Reset link is invalid or expired",
+      "expected": "Reset link is invalid or expired",
+      "passed": true
+    },
+    {
+      "name": "Existing session remains valid",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Existing session identity preserved",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Original password still works",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Proposed replacement password does not work",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Credential version unchanged",
+      "actual": "0",
+      "expected": "0",
+      "passed": true
+    },
+    {
+      "name": "Expired token remains unconsumed",
+      "actual": "1",
+      "expected": "1",
+      "passed": true
+    }
+  ],
+  "finishedAt": "2026-10-14T20:38:24.987Z",
+  "total": 16,
+  "passed": 16
+}

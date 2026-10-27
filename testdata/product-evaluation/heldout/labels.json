@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "split": "heldout",
+  "reportingGroup": "SELF_WRITTEN_WORKFLOW_PILOT",
+  "cases": [
+    {
+      "id": "PAIR-001",
+      "agreement": {
+        "path": "testdata/product-evaluation/heldout/PAIR-001-agreement.txt",
+        "sha256": "285ca7acbb8e791c4b0dd5d5bdc74c03ddb056ac89e36e9be572c555178a6f73",
+        "paymentObligations": [
+          {
+            "start": 37,
+            "end": 168,
+            "quote": "Customer shall pay Atlas Systems the monthly support charge within 24 calendar days after Customer receives Atlas Systems' invoice.",
+            "days": 24,
+            "dayUnit": "CALENDAR_DAYS",
+            "trigger": "INVOICE_RECEIPT",
+            "payer": "Customer",
+            "payee": "Atlas Systems",
+            "scope": "monthly support charge"
+          }
+        ]
+      },
+      "sow": {
+        "path": "testdata/product-evaluation/heldout/PAIR-001-sow.txt",
+        "sha256": "c971cc96352c3f390df0c746cb83bf6cf96a85983c53ad3028b5208cca5b692a",
+        "paymentObligations": [
+          {
+            "start": 45,
+            "end": 156,
+            "quote": "Customer must pay Atlas Systems 35 percent of the migration fee within 12 business days after the invoice date.",
+            "days": 12,
+            "dayUnit": "BUSINESS_DAYS",
+            "trigger": "INVOICE_DATE",
+            "payer": "Customer",
+            "payee": "Atlas Systems",
+            "scope": "35 percent of the migration fee"
+          },
+          {
+            "start": 157,
+            "end": 312,
+            "quote": "Customer must pay Atlas Systems the remaining 65 percent within 8 calendar days after Customer gives final written acceptance of the migration deliverable.",
+            "days": 8,
+            "dayUnit": "CALENDAR_DAYS",
+            "trigger": "FINAL_ACCEPTANCE",
+            "payer": "Customer",
+            "payee": "Atlas Systems",
+            "scope": "remaining 65 percent of the migration fee"
+          }
+        ]
+      },
+      "expectedReviewStatus": "REVIEW_REQUIRED",
+      "reviewerNotes": "Invoice issuance deadline in the SOW is not a Customer payment obligation. This assistant-written pair is only a workflow pilot."
+    }
+  ]
+}

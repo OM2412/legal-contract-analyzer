@@ -3,7 +3,6 @@ package com.omjadon.contractanalyzer.payment;
 import com.omjadon.contractanalyzer.evidence.EvidenceValidator;
 import com.omjadon.contractanalyzer.model.EvidenceSpan;
 import com.omjadon.contractanalyzer.model.SourceDocument;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -105,15 +104,74 @@ public final class PaymentTermExtractor {
 
         List<PaymentTerm> terms = new ArrayList<>();
 
-        addMatches(document, PAYMENT_CLAUSE, false, false, false, terms);
-        addMatches(document, LINKED_INVOICE_CLAUSE, true, true, false, terms);
-        addMatches(document, DUE_AND_PAYABLE_CLAUSE, true, true, false, terms);
-        addMatches(document, PASSIVE_PAYMENT_CLAUSE, true, false, false, terms);
-        addMatches(document, INSTALLMENT_CLAUSE, false, false, true, terms);
+        addMatches(
+                document, PAYMENT_CLAUSE,
+                false, false, false, terms
+        );
+        addMatches(
+                document, LINKED_INVOICE_CLAUSE,
+                true, true, false, terms
+        );
+        addMatches(
+                document, DUE_AND_PAYABLE_CLAUSE,
+                true, true, false, terms
+        );
+        addMatches(
+                document, PASSIVE_PAYMENT_CLAUSE,
+                true, false, false, terms
+        );
+        addMatches(
+                document, INSTALLMENT_CLAUSE,
+                false, false, true, terms
+        );
 
-        terms.sort(Comparator.comparingInt(
-                term -> term.evidence().start()
-        ));
+        for (PaymentTerm candidate
+                : NamedPartyPaymentTermExtractor.extractAll(document)) {
+            int start = document.text().offsetByCodePoints(
+                    0, candidate.evidence().start()
+            );
+            int end = document.text().offsetByCodePoints(
+                    0, candidate.evidence().end()
+            );
+
+            if (isExplicitlyNonOperativeExample(
+                    document.text(), start, end
+            )) {
+                continue;
+            }
+
+            // Context evidence can overlap a preceding obligation.
+            // Deduplicate only the same obligation, not every overlap.
+            boolean duplicate = terms.stream().anyMatch(term ->
+                    term.evidence().end() == candidate.evidence().end()
+                            && term.evidence().start()
+                                    < candidate.evidence().end()
+                            && candidate.evidence().start()
+                                    < term.evidence().end()
+                            && term.days() == candidate.days()
+                            && term.dayUnit() == candidate.dayUnit()
+                            && term.trigger() == candidate.trigger()
+                            && term.scope().equalsIgnoreCase(
+                                    candidate.scope()
+                            )
+                            && term.payer().equalsIgnoreCase(
+                                    candidate.payer()
+                            )
+                            && term.payee().equalsIgnoreCase(
+                                    candidate.payee()
+                            )
+            );
+
+            if (!duplicate) {
+                terms.add(candidate);
+            }
+        }
+
+        terms.sort(
+                Comparator.comparingInt(
+                        (PaymentTerm term) -> term.evidence().start()
+                ).thenComparingInt(term -> term.evidence().end())
+        );
 
         return List.copyOf(terms);
     }
@@ -185,6 +243,7 @@ public final class PaymentTermExtractor {
             String payer = fixedPartiesAndScope
                     ? "Client"
                     : matcher.group("payer");
+
             String payee = fixedPartiesAndScope
                     ? "Provider"
                     : matcher.group("payee");
@@ -213,32 +272,49 @@ public final class PaymentTermExtractor {
     }
 
     private static boolean isExplicitlyNonOperativeExample(
-            String text, int start, int end
+            String text,
+            int start,
+            int end
     ) {
-        if (start == 0 || end >= text.length()) {
+        // A containing quotation may include multiple payment sentences.
+        int opening = -1;
+        char closingCharacter = 0;
+
+        for (int index = 0; index < start; index++) {
+            char character = text.charAt(index);
+
+            if (opening < 0) {
+                if (character == '"' || character == '\u201C') {
+                    opening = index;
+                    closingCharacter = character == '"'
+                            ? '"'
+                            : '\u201D';
+                }
+            } else if (character == closingCharacter) {
+                opening = -1;
+                closingCharacter = 0;
+            }
+        }
+
+        if (opening < 0) {
             return false;
         }
 
-        char opening = text.charAt(start - 1);
-        char closing = text.charAt(end);
+        int closing = text.indexOf(closingCharacter, start);
 
-        boolean enclosedInQuotes =
-                (opening == '"' && closing == '"')
-                        || (opening == '\u201C' && closing == '\u201D');
-
-        if (!enclosedInQuotes) {
+        if (closing < end) {
             return false;
         }
 
         int contextStart = Math.max(
-                Math.max(0, start - 240),
+                Math.max(0, opening - 240),
                 Math.max(
-                        text.lastIndexOf('.', start - 2),
-                        text.lastIndexOf('\n', start - 1)
+                        text.lastIndexOf('.', opening - 1),
+                        text.lastIndexOf('\n', opening - 1)
                 ) + 1
         );
 
-        String context = text.substring(contextStart, start)
+        String context = text.substring(contextStart, opening)
                 .toLowerCase(Locale.ROOT);
 
         boolean describedAsExample =
@@ -250,15 +326,17 @@ public final class PaymentTermExtractor {
                 context.contains("no payment obligation")
                         || context.contains("not binding")
                         || context.contains("non-binding")
-                        || context.contains("does not create an obligation");
+                        || context.contains(
+                                "does not create an obligation"
+                        );
 
-               if (describedAsExample && explicitlyNonOperative) {
+        if (describedAsExample && explicitlyNonOperative) {
             return true;
         }
 
         String following = text.substring(
-                end + 1,
-                Math.min(text.length(), end + 121)
+                closing + 1,
+                Math.min(text.length(), closing + 121)
         ).stripLeading().toLowerCase(Locale.ROOT);
 
         return describedAsExample
@@ -267,7 +345,9 @@ public final class PaymentTermExtractor {
                 );
     }
 
-    public static Optional<PaymentTerm> extract(SourceDocument document) {
+    public static Optional<PaymentTerm> extract(
+            SourceDocument document
+    ) {
         List<PaymentTerm> terms = extractAll(document);
 
         if (terms.size() > 1) {

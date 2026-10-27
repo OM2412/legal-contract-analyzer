@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { apiFetch } from './apiClient'
 
 const MAX_PDF_BYTES = 10 * 1024 * 1024
 const MAX_TXT_BYTES = 1024 * 1024
@@ -147,9 +148,8 @@ function ReviewWorkspace({ onReview }) {
     upload.append('maxDays', String(days))
 
     setSubmitting(true)
-
     try {
-      const response = await fetch('/api/review', {
+      const response = await apiFetch('/api/review', {
         method: 'POST',
         body: upload,
       })

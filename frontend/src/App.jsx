@@ -1,495 +1,437 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import HomePage from './HomePage'
 import ReviewWorkspace from './ReviewWorkspace'
 import ReviewResult from './ReviewResult'
 import AiStudio from './AiStudio'
+import AuthPage from './AuthPage'
+import SavedReviews from './SavedReviews'
+import PasswordRecovery from './PasswordRecovery'
+import ReviewLimitations from './ReviewLimitations'
+import PrivacyPage from './PrivacyPage'
+import { FolioIcon, MoonLoader } from './components/FolioUI'
+import { apiFetch } from './apiClient'
+
 import './App.css'
+import './SavedReviews.css'
+import './AppNavigation.css'
+
 const AI_ENABLED = import.meta.env.VITE_AI_ENABLED !== 'false'
 
-const sample = {
-  agreement: {
-    label: 'Agreement',
-    days: '30 calendar days',
-    quote:
-      'Client shall pay Provider the project fee within 30 calendar days after receipt of the invoice.',
-    location: 'Page 1 · PDF text',
-    assessment: 'Within demo policy',
-  },
-  sow: {
-    label: 'Statement of Work',
-    days: '60 calendar days',
-    quote:
-      'Client shall pay Provider the project fee within 60 calendar days after receipt of the invoice.',
-    location: 'Page 1 · PDF text',
-    assessment: 'Outside demo policy',
-  },
+const PROTECTED = [
+  'workspace',
+  'review',
+  'risks',
+  'ai-studio',
+  'archive',
+]
+
+const TITLES = {
+  workspace: ['01 / DOCUMENT DOCK', 'Bring your documents.'],
+  review: ['02 / REVIEW DESK', 'Follow the evidence.'],
+  risks: ['03 / RISK STUDIO', 'Explore the signals.'],
+  'ai-studio': ['OPTIONAL / AI STUDIO', 'Take a second look.'],
+  archive: ['YOUR PRIVATE ARCHIVE', 'Pick up where you left off.'],
 }
 
-function DocumentScene() {
+const emptyAi = () => ({
+  agreementData: null,
+  sowData: null,
+  progress: '',
+  error: '',
+})
+
+const emptyChecklist = () => ({
+  verified: {},
+  notes: '',
+})
+
+function viewFromHash() {
+  const hash = window.location.hash
+
+  if (hash.startsWith('#reset-password')) return 'reset'
+  if (hash === '#forgot-password') return 'forgot'
+  if (hash === '#sign-in') return 'auth'
+  if (hash === '#workspace') return 'workspace'
+
+  if (hash === '#review' || hash === '#review-result') {
+    return 'review'
+  }
+
+  if (hash === '#risk-studio') return 'risks'
+  if (hash === '#my-reviews') return 'archive'
+
+  if (AI_ENABLED && hash === '#ai-studio') {
+    return 'ai-studio'
+  }
+
+  if (hash === '#review-limitations') return 'limitations'
+  if (hash === '#privacy') return 'privacy'
+
+  return 'site'
+}
+
+function resetTokenFromHash() {
+  return window.location.hash.match(
+    /^#reset-password=([A-Za-z0-9_-]{43})$/
+  )?.[1] ?? ''
+}
+
+function WorkspaceFrame({ view, children }) {
+  const [eyebrow, title] = TITLES[view] ?? TITLES.workspace
+
+  const Content = ['archive', 'ai-studio'].includes(view)
+    ? 'div'
+    : 'main'
+
+  const links = [
+    ['workspace', '#workspace', 'Workspace', 'upload'],
+    ['review', '#review', 'Review', 'document'],
+    ['risks', '#risk-studio', 'Risk Studio', 'shield'],
+    ...(AI_ENABLED
+      ? [['ai-studio', '#ai-studio', 'AI Studio', 'moon']]
+      : []),
+    ['archive', '#my-reviews', 'My reviews', 'save'],
+  ]
+
   return (
-    <div className="document-scene" aria-hidden="true">
-      <div className="scene-grid" />
+    <>
+      <a className="skip-link" href="#app-main">
+        Skip to content
+      </a>
 
-      <div className="scene-sheet scene-sheet-agreement">
-        <div className="scene-sheet-top">
-          <span>01 / AGREEMENT</span>
-          <span>PDF</span>
-        </div>
-        <div className="scene-sheet-title" />
-        <div className="scene-sheet-line scene-sheet-line-long" />
-        <div className="scene-sheet-line" />
-        <div className="scene-sheet-line scene-sheet-line-short" />
-        <div className="scene-highlight">
-          <span>PAYMENT TERM</span>
-          <strong>30 days</strong>
-        </div>
-        <div className="scene-sheet-line scene-sheet-line-long" />
-        <div className="scene-sheet-line scene-sheet-line-short" />
-      </div>
+      <header className="app-frame__header">
+        <div className="page-container app-frame__bar">
+          <a
+            className="app-frame__brand"
+            href="#top"
+            aria-label="Folio home"
+          >
+            <FolioIcon name="moon" size={27} />
+            folio.
+          </a>
 
-      <div className="scene-connector">
-        <span>COMPARE</span>
-      </div>
+          <nav
+            className="app-frame__nav"
+            aria-label="Workspace navigation"
+          >
+            {links.map(([name, href, label, icon]) => (
+              <a
+                key={name}
+                href={href}
+                aria-current={view === name ? 'page' : undefined}
+              >
+                <FolioIcon name={icon} size={18} />
+                {label}
+              </a>
+            ))}
+          </nav>
 
-      <div className="scene-sheet scene-sheet-sow">
-        <div className="scene-sheet-top">
-          <span>02 / SOW</span>
-          <span>PDF</span>
+          <a className="app-frame__home" href="#top">
+            Home
+            <FolioIcon name="arrow" size={17} />
+          </a>
         </div>
-        <div className="scene-sheet-title" />
-        <div className="scene-sheet-line scene-sheet-line-long" />
-        <div className="scene-sheet-line" />
-        <div className="scene-sheet-line scene-sheet-line-short" />
-        <div className="scene-highlight">
-          <span>PAYMENT TERM</span>
-          <strong>60 days</strong>
-        </div>
-        <div className="scene-sheet-line scene-sheet-line-long" />
-        <div className="scene-sheet-line" />
-        <div className="scene-sheet-line scene-sheet-line-short" />
-      </div>
+      </header>
 
-      <div className="scene-result">
-        <span className="scene-result-dot" />
-        Difference found
-      </div>
-    </div>
+      <Content
+        id="app-main"
+        className="app-frame__main"
+        tabIndex={-1}
+      >
+        <div className="page-container app-frame__intro">
+          <span className="app-frame__eyebrow">
+            {eyebrow}
+          </span>
+
+          <h1 id="app-route-heading" tabIndex={-1}>
+            {title}
+          </h1>
+
+          <p>Evidence first. Your judgment stays in control.</p>
+        </div>
+
+        {children}
+      </Content>
+    </>
   )
 }
 
-function SampleReview() {
-  const [activeDocument, setActiveDocument] = useState('agreement')
-  const selected = sample[activeDocument]
-
+function ReviewEmptyState({ ai = false }) {
   return (
-    <div className="sample-board">
-      <div className="sample-board-top">
-        <div>
-          <span className="eyebrow">ILLUSTRATIVE EXAMPLE</span>
-          <h3>One payment. Two timelines.</h3>
-        </div>
-        <span className="sample-status">Potential difference</span>
-      </div>
+    <section className="page-container app-frame__empty">
+      <span
+        className="app-frame__empty-icon"
+        aria-hidden="true"
+      >
+        <FolioIcon name="document" size={38} />
+      </span>
 
-      <div className="sample-comparison">
-        <div className="sample-term">
-          <span>AGREEMENT</span>
-          <strong>30</strong>
-          <small>calendar days</small>
-        </div>
-        <div className="sample-versus" aria-hidden="true">↔</div>
-        <div className="sample-term sample-term-sow">
-          <span>STATEMENT OF WORK</span>
-          <strong>60</strong>
-          <small>calendar days</small>
-        </div>
-      </div>
+      <h2>
+        {ai
+          ? 'Bring a review into the studio.'
+          : 'Your next review starts here.'}
+      </h2>
 
-      <div className="sample-evidence">
-        <div className="sample-evidence-heading">
-          <div>
-            <span className="eyebrow">FOLLOW THE EVIDENCE</span>
-            <h4>Read the source, not just the result.</h4>
-          </div>
-
-          <div className="sample-switch" aria-label="Choose sample document">
-            <button
-              type="button"
-              aria-pressed={activeDocument === 'agreement'}
-              onClick={() => setActiveDocument('agreement')}
-            >
-              Agreement
-            </button>
-            <button
-              type="button"
-              aria-pressed={activeDocument === 'sow'}
-              onClick={() => setActiveDocument('sow')}
-            >
-              SOW
-            </button>
-          </div>
-        </div>
-
-        <blockquote key={activeDocument}>
-          “{selected.quote}”
-        </blockquote>
-
-        <div className="sample-evidence-footer">
-          <span>{selected.label} · {selected.location}</span>
-          <span>{selected.assessment}</span>
-        </div>
-      </div>
-
-      <p className="sample-disclaimer">
-        This is synthetic sample data. P-DEMO-30 is an illustrative business
-        preference; review the complete original documents before a decision.
+      <p>
+        {ai
+          ? 'Run a review to make the uploaded originals available for AI suggestions.'
+          : 'Upload an Agreement and SOW to see their comparison and source evidence.'}
       </p>
-    </div>
+
+      <p>
+        Unsaved reviews and original files are available only in
+        this tab until you refresh or close it.
+      </p>
+
+      <div className="app-frame__empty-actions">
+        <a className="button button-lime" href="#workspace">
+          Open workspace
+          <FolioIcon name="arrow" />
+        </a>
+
+        <a
+          className="app-frame__text-link"
+          href="#my-reviews"
+        >
+          Browse saved reviews
+        </a>
+      </div>
+    </section>
   )
 }
 
 function App() {
   const [review, setReview] = useState(null)
   const [reviewedFiles, setReviewedFiles] = useState(null)
-  const [aiSession, setAiSession] = useState({
-    agreementData: null,
-    sowData: null,
-    progress: '',
-    error: '',
-  })
-  const [reviewChecklist, setReviewChecklist] = useState({
-    verified: {},
-    notes: '',
-  })
- const [view, setView] = useState(() =>
-  AI_ENABLED && window.location.hash === '#ai-studio'
-    ? 'ai-studio'
-    : 'site'
-)
+  const [aiSession, setAiSession] = useState(emptyAi)
+  const [reviewChecklist, setReviewChecklist] =
+    useState(emptyChecklist)
+
+  const [view, setView] = useState(viewFromHash)
+  const [accountStatus, setAccountStatus] = useState('checking')
+  const [resetToken, setResetToken] = useState(resetTokenFromHash)
+  const [recoveryEntry, setRecoveryEntry] = useState(0)
+
+  const authRevision = useRef(0)
+
+  useEffect(() => {
+    let active = true
+    const revision = authRevision.current
+
+    apiFetch('/api/auth/me')
+      .then((response) => {
+        if (active && revision === authRevision.current) {
+          setAccountStatus(
+            response.ok ? 'signed-in' : 'signed-out'
+          )
+        }
+      })
+      .catch(() => {
+        if (active && revision === authRevision.current) {
+          setAccountStatus('signed-out')
+        }
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   useEffect(() => {
     function syncView() {
-     setView(
-  AI_ENABLED && window.location.hash === '#ai-studio'
-    ? 'ai-studio'
-    : 'site'
-)
+      const nextView = viewFromHash()
+
+      if (
+        nextView === 'reset' &&
+        window.location.hash.startsWith('#reset-password=')
+      ) {
+        setResetToken(resetTokenFromHash())
+        setRecoveryEntry((entry) => entry + 1)
+
+        window.history.replaceState(
+          window.history.state,
+          '',
+          window.location.pathname +
+            window.location.search +
+            '#reset-password'
+        )
+      } else if (nextView !== 'reset') {
+        setResetToken('')
+      }
+
+      setView(nextView)
     }
 
+    syncView()
     window.addEventListener('hashchange', syncView)
-    return () => window.removeEventListener('hashchange', syncView)
+
+    return () => {
+      window.removeEventListener('hashchange', syncView)
+    }
   }, [])
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      if (view === 'site') {
+        const target = window.location.hash.slice(1) || 'top'
+
+        document.getElementById(target)?.scrollIntoView({
+          behavior: 'instant',
+          block: 'start',
+        })
+      } else {
+        window.scrollTo({
+          top: 0,
+          behavior: 'instant',
+        })
+
+        document.getElementById('app-route-heading')?.focus({
+          preventScroll: true,
+        })
+      }
+    })
+
+    return () => {
+      window.cancelAnimationFrame(frame)
+    }
+  }, [view, accountStatus])
+
+  function navigate(hash) {
+    window.location.hash = hash
+    setView(viewFromHash())
+  }
+
+  function handleAuthenticated() {
+    authRevision.current += 1
+    setAccountStatus('signed-in')
+
+    const destination = viewFromHash()
+
+    if (PROTECTED.includes(destination)) {
+      setView(destination)
+    } else {
+      navigate('workspace')
+    }
+  }
 
   function handleReview(data, files) {
     setReview(data)
     setReviewedFiles(files)
-    setReviewChecklist({
-      verified: {},
-      notes: '',
-    })
-    setAiSession({
-      agreementData: null,
-      sowData: null,
-      progress: '',
-      error: '',
-    })
-
-    window.requestAnimationFrame(() => {
-      const section = document.getElementById('review-result')
-      section?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      })
-      section?.focus({ preventScroll: true })
-    })
-  }
-
-  function openAiStudio() {
-    window.location.hash = 'ai-studio'
-    setView('ai-studio')
-    window.scrollTo(0, 0)
+    setReviewChecklist(emptyChecklist())
+    setAiSession(emptyAi())
+    navigate('review')
   }
 
   function backToReview() {
-    const target = review ? 'review-result' : 'workspace'
-
-    window.location.hash = target
-    setView('site')
-
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        document.getElementById(target)?.scrollIntoView({
-          block: 'start',
-        })
-      })
-    })
+    navigate(review ? 'review' : 'workspace')
   }
 
-  if (view === 'ai-studio') {
+  if (view === 'forgot' || view === 'reset') {
     return (
-      <>
-        <a className="skip-link" href="#main">
-          Skip to content
-        </a>
-        <AiStudio
-          files={reviewedFiles}
-          session={aiSession}
-          onSessionChange={setAiSession}
-          onBack={backToReview}
-        />
-      </>
+      <PasswordRecovery
+        key={`${view}-${recoveryEntry}`}
+        mode={view === 'reset' ? 'reset' : 'forgot'}
+        resetToken={resetToken}
+        onCompleted={() => {
+          authRevision.current += 1
+          setAccountStatus('signed-out')
+          setResetToken('')
+          setReview(null)
+          setReviewedFiles(null)
+          setReviewChecklist(emptyChecklist())
+          setAiSession(emptyAi())
+        }}
+      />
+    )
+  }
+
+  if (view === 'limitations') {
+    return (
+      <ReviewLimitations accountStatus={accountStatus} />
+    )
+  }
+
+  if (view === 'privacy') {
+    return (
+      <PrivacyPage accountStatus={accountStatus} />
+    )
+  }
+
+  if (accountStatus === 'checking' && view !== 'site') {
+    return (
+      <main className="app-session-check">
+        <MoonLoader label="Checking session" />
+        <p>Checking your session...</p>
+      </main>
+    )
+  }
+
+  if (
+    view === 'auth' ||
+    (
+      PROTECTED.includes(view) &&
+      accountStatus !== 'signed-in'
+    )
+  ) {
+    return (
+      <AuthPage onAuthenticated={handleAuthenticated} />
     )
   }
 
   return (
-    <div className="site-shell">
-      <a className="skip-link" href="#main">
-        Skip to content
-      </a>
+    <>
+      {view === 'site' && (
+        <HomePage accountStatus={accountStatus} />
+      )}
 
-      <header className="site-header">
-        <nav
-          className="site-nav page-container"
-          aria-label="Main navigation"
+      {accountStatus === 'signed-in' && (
+        <div
+          className="app-frame"
+          hidden={view === 'site'}
         >
-          <a className="brand" href="#top" aria-label="Folio home">
-            <span className="brand-mark" aria-hidden="true">
-              <span />
-              <span />
-            </span>
-            <span>
-              folio<span className="brand-period">.</span>
-            </span>
-          </a>
-
-          <div className="nav-links">
-            <a href="#how-it-works">How it works</a>
-            <a href="#sample">Sample review</a>
-            <a href="#about">About</a>
-          </div>
-
-          <a className="nav-action" href="#workspace">
-            Open workspace <span aria-hidden="true">↗</span>
-          </a>
-        </nav>
-      </header>
-
-      <main id="main">
-        <section className="hero-section" id="top">
-          <div className="hero-inner page-container">
-            <div className="hero-copy">
-              <span className="hero-kicker">
-                <span className="live-indicator" />
-                CONTRACT INTELLIGENCE, WITH RECEIPTS
-              </span>
-
-              <h1>
-                Find the difference.
-                <em> Follow the evidence.</em>
-              </h1>
-
-              <p className="hero-description">
-                Compare payment terms across an Agreement and Statement of Work.
-                See what differs, why it matters for your review, and the exact
-                source text behind each finding.
-              </p>
-
-              <div className="hero-actions">
-                <a className="button button-lime" href="#workspace">
-                  Review documents
-                  <span aria-hidden="true">↗</span>
-                </a>
-                <a className="button button-outline" href="#how-it-works">
-                  See how it works
-                </a>
-              </div>
-
-              <div className="hero-footnote">
-                PDF + TXT <span aria-hidden="true">/</span>
-                Local OCR support <span aria-hidden="true">/</span>
-                Human review required
-              </div>
+          <WorkspaceFrame view={view}>
+            <div
+              className="app-route"
+              hidden={view !== 'workspace'}
+            >
+              <ReviewWorkspace onReview={handleReview} />
             </div>
 
-            <DocumentScene />
-          </div>
+            {(view === 'review' || view === 'risks') && (
+              review ? (
+                <ReviewResult
+                  key={view}
+                  panel={view === 'risks' ? 'risks' : 'review'}
+                  data={review}
+                  files={reviewedFiles}
+                  checklist={reviewChecklist}
+                  onChecklistChange={setReviewChecklist}
+                />
+              ) : (
+                <ReviewEmptyState />
+              )
+            )}
 
-          <div className="hero-bottom page-container">
-            <span>AGREEMENT ↔ SOW</span>
-            <span>SCROLL TO EXPLORE ↓</span>
-          </div>
-        </section>
+            {view === 'archive' && (
+              <SavedReviews onBack={backToReview} />
+            )}
 
-        <section
-          className="intro-strip"
-          aria-label="The review workflow"
-        >
-          <div className="page-container intro-strip-inner">
-            <span>01 / UPLOAD</span>
-            <span>02 / COMPARE</span>
-            <span>03 / VERIFY</span>
-          </div>
-        </section>
-
-        <section
-          className="process-section section-spacing"
-          id="how-it-works"
-        >
-          <div className="page-container">
-            <div className="section-heading">
-              <span className="eyebrow">THE PROCESS / 001–003</span>
-              <h2>Less searching.<br />More understanding.</h2>
-              <p>
-                Each finding leads back to a quote. Unclear or unsupported
-                wording stays visible for a human reviewer.
-              </p>
-            </div>
-
-            <div className="process-grid">
-              <article className="process-card">
-                <span className="process-number">01</span>
-                <div
-                  className="process-art process-art-upload"
-                  aria-hidden="true"
-                >
-                  <span className="mini-document">AGREEMENT</span>
-                  <span className="mini-document">SOW</span>
-                </div>
-                <h3>Bring both documents.</h3>
-                <p>
-                  Add an Agreement and SOW as PDFs or text files. Scanned PDF
-                  pages can use local OCR.
-                </p>
-                <span className="process-caption">DOCUMENT INTAKE</span>
-              </article>
-
-              <article className="process-card">
-                <span className="process-number">02</span>
-                <div
-                  className="process-art process-art-compare"
-                  aria-hidden="true"
-                >
-                  <span>30 DAYS</span>
-                  <span>60 DAYS</span>
-                </div>
-                <h3>See what changed.</h3>
-                <p>
-                  Compare supported payment periods, day units, triggers and
-                  payment-priority wording.
-                </p>
-                <span className="process-caption">STRUCTURED COMPARISON</span>
-              </article>
-
-              <article className="process-card">
-                <span className="process-number">03</span>
-                <div
-                  className="process-art process-art-evidence"
-                  aria-hidden="true"
-                >
-                  <span>“...within 60 calendar days...”</span>
-                  <small>PAGE 01 · SOURCE QUOTE</small>
-                </div>
-                <h3>Follow the evidence.</h3>
-                <p>
-                  Inspect exact extracted quotes and page references. Verify
-                  OCR text against the original scanned page.
-                </p>
-                <span className="process-caption">HUMAN VERIFICATION</span>
-              </article>
-            </div>
-          </div>
-        </section>
-
-        <section className="sample-section section-spacing" id="sample">
-          <div className="page-container">
-            <div className="section-heading sample-section-heading">
-              <span className="eyebrow">
-                A CLOSER LOOK / SAMPLE REVIEW
-              </span>
-              <h2>
-                The details make<br />
-                <em>the difference.</em>
-              </h2>
-              <p>
-                Explore a synthetic example of the Agreement and SOW review.
-                Switch documents to inspect each exact quote.
-              </p>
-            </div>
-
-            <SampleReview />
-          </div>
-        </section>
-
-        <ReviewWorkspace onReview={handleReview} />
-        <ReviewResult
-          data={review}
-          files={reviewedFiles}
-          checklist={reviewChecklist}
-          onChecklistChange={setReviewChecklist}
-        />
-
-       {AI_ENABLED && review && reviewedFiles && (
-          <section className="ai-studio-entry section-spacing">
-            <div className="page-container ai-studio-entry-inner">
-              <div>
-                <span className="eyebrow">OPTIONAL / LOCAL AI</span>
-                <h2>Take a second look at the wording.</h2>
-                <p>
-                  Open a separate space for source-verified AI quote
-                  suggestions. Your rule-based review stays available here.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                className="ai-studio-entry-button"
-                onClick={openAiStudio}
-              >
-                Enter AI Studio
-              </button>
-            </div>
-          </section>
-        )}
-
-        <section className="about-section section-spacing" id="about">
-          <div className="page-container about-layout">
-            <div>
-              <span className="eyebrow">BUILT WITH INTENTION</span>
-              <h2>Contracts deserve<br />a closer read.</h2>
-            </div>
-
-            <div className="about-copy">
-              <p>
-                Folio is an evidence-focused student project built at MITS
-                Gwalior by Om Singh Jadon and Karan Pratap Singh. The current
-                working feature reviews supported payment wording across an
-                Agreement and Statement of Work.
-              </p>
-              <p>
-                It helps surface differences and passages needing attention.
-                A reviewer still checks the original documents and makes the
-                final decision.
-              </p>
-              <a
-                href="https://github.com/OM2412/legal-contract-analyzer"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Explore the project on GitHub
-                <span aria-hidden="true"> ↗</span>
-              </a>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      <footer className="site-footer">
-        <div className="page-container footer-inner">
-          <span className="footer-brand">folio.</span>
-          <span>Evidence first. Human judgment always.</span>
-          <a href="#top">Back to top ↑</a>
+            {view === 'ai-studio' && (
+              review && reviewedFiles ? (
+                <AiStudio
+                  files={reviewedFiles}
+                  session={aiSession}
+                  onSessionChange={setAiSession}
+                  onBack={backToReview}
+                />
+              ) : (
+                <ReviewEmptyState ai />
+              )
+            )}
+          </WorkspaceFrame>
         </div>
-      </footer>
-    </div>
+      )}
+    </>
   )
 }
 

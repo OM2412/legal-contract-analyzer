@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
 const backendUrl =
-  process.env.CONTRACT_API_URL ?? 'http://127.0.0.1:8081'
+  process.env.CONTRACT_API_URL ?? 'http://127.0.0.1:8080'
 
 export default defineConfig({
   plugins: [react()],

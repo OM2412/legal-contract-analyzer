@@ -1,0 +1,5 @@
+﻿Client shall pay Provider the project fee within 30 calendar days after receipt of the invoice.
+
+Either party may terminate this Agreement upon 30 days written notice.
+
+The aggregate liability of either party under this Agreement shall not exceed the fees paid in the preceding twelve months. This limitation will not limit the liability of either party for fraud.

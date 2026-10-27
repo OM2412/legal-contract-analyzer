@@ -1,0 +1,191 @@
+{
+  "runId": "d005386e-65da-4b76-a521-d2059608fdb2",
+  "startedAt": "2026-10-14T20:38:01.045Z",
+  "baseUrl": "http://127.0.0.1:8081",
+  "completed": true,
+  "checks": [
+    {
+      "name": "Register test account",
+      "actual": 201,
+      "expected": 201,
+      "passed": true
+    },
+    {
+      "name": "Login before reset",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Old session works before reset",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Original account identity",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Reset request accepted",
+      "actual": 202,
+      "expected": 202,
+      "passed": true
+    },
+    {
+      "name": "Reset email contains expected link",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Unknown account acknowledgement",
+      "actual": 202,
+      "expected": 202,
+      "passed": true
+    },
+    {
+      "name": "Known and unknown acknowledgements match",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Authenticated reset without CSRF denied",
+      "actual": 403,
+      "expected": 403,
+      "passed": true
+    },
+    {
+      "name": "Short password rejected",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Valid password reset",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Previously valid session rejected after reset",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Used token rejected",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Old password rejected",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "New password login",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "New session works",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Account identity preserved",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Reset request accepted",
+      "actual": 202,
+      "expected": 202,
+      "passed": true
+    },
+    {
+      "name": "Reset email contains expected link",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Reset request accepted",
+      "actual": 202,
+      "expected": 202,
+      "passed": true
+    },
+    {
+      "name": "Reset email contains expected link",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "New reset token differs",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Superseded reset link rejected",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Concurrent reset has exactly one success",
+      "actual": 1,
+      "expected": 1,
+      "passed": true
+    },
+    {
+      "name": "Concurrent reset rejects the other request",
+      "actual": 1,
+      "expected": 1,
+      "passed": true
+    },
+    {
+      "name": "Second old session rejected after reset",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Concurrent reset password works",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Final account identity",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Fourth email request is rate limited",
+      "actual": 429,
+      "expected": 429,
+      "passed": true
+    },
+    {
+      "name": "Rate limit includes Retry-After",
+      "actual": "900",
+      "expected": "900",
+      "passed": true
+    }
+  ],
+  "finishedAt": "2026-10-14T20:38:14.168Z",
+  "total": 30,
+  "passed": 30
+}

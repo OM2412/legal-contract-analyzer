@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import EvidenceLens from './EvidenceLens'
+import RiskStudio from './RiskStudio'
 import ReviewChecklist from './ReviewChecklist'
+import SaveReviewButton from './SaveReviewButton'
 function readable(value) {
   return value ? value.replaceAll('_', ' ') : 'Not assessed'
 }
@@ -81,7 +83,7 @@ function DurationChart({ data }) {
     data.policyMaxDays > 0
 
   const rows = [
-    { label: 'Agreement', days: agreement.days, kind: 'agreement' },
+    { label: 'Agreement', days: agreement.days, kind: 'agreement'},
     { label: 'Statement of Work', days: sow.days, kind: 'sow' },
   ]
 
@@ -223,6 +225,7 @@ function ReviewResult({
   files,
   checklist,
   onChecklistChange,
+  panel = 'all',
 }) {
   const [selectedEvidence, setSelectedEvidence] = useState(null)
 
@@ -247,7 +250,7 @@ function ReviewResult({
   return (
     <>
       <section
-        className="review-result-section section-spacing"
+       className={`review-result-section section-spacing${panel === 'risks' ? ' app-result-panel--hidden' : ''}`}
         id="review-result"
         aria-labelledby="result-heading"
         tabIndex="-1"
@@ -262,6 +265,12 @@ function ReviewResult({
             >
               Print / Save as PDF
             </button>
+            <SaveReviewButton
+  key={`${data.agreementVersion}-${data.sowVersion}-${data.policyMaxDays}`}
+  files={files}
+  maxDays={data.policyMaxDays ?? 30}
+  reviewStatus={data.reviewStatus}
+/>
             <ReviewChecklist
   data={data}
   checklist={checklist}
@@ -372,6 +381,20 @@ function ReviewResult({
           </p>
         </div>
       </section>
+
+     <div
+  className={
+    panel === 'review'
+      ? 'app-result-panel--hidden'
+      : undefined
+  }
+>
+  <RiskStudio
+    data={data}
+    files={files}
+    onInspect={inspect}
+  />
+</div>
 
       {selectedEvidence && (
         <EvidenceLens

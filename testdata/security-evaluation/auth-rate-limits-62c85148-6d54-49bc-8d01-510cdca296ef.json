@@ -1,0 +1,349 @@
+{
+  "runId": "62c85148-6d54-49bc-8d01-510cdca296ef",
+  "startedAt": "2026-10-14T23:48:56.884Z",
+  "finishedAt": "2026-10-14T23:49:51.792Z",
+  "baseUrl": "http://127.0.0.1:8081",
+  "completed": true,
+  "totalChecks": 56,
+  "passedChecks": 56,
+  "failure": null,
+  "checks": [
+    {
+      "name": "Login without CSRF rejected",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Login with invalid CSRF rejected",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 1 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 2 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 3 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 4 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 5 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 6 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 7 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 8 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 9 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 10 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 11 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 12 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 13 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 14 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 15 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 16 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 17 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 18 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 19 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 20 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 21 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 22 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 23 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 24 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 25 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 26 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 27 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 28 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 29 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 30 reaches authentication",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 31: status",
+      "actual": 429,
+      "expected": 429,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 31: Retry-After",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 31: JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Login attempt 31: no-store",
+      "actual": "no-store",
+      "expected": "no-store",
+      "passed": true
+    },
+    {
+      "name": "Forwarded header cannot bypass local login limit: status",
+      "actual": 429,
+      "expected": 429,
+      "passed": true
+    },
+    {
+      "name": "Forwarded header cannot bypass local login limit: Retry-After",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Forwarded header cannot bypass local login limit: JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Forwarded header cannot bypass local login limit: no-store",
+      "actual": "no-store",
+      "expected": "no-store",
+      "passed": true
+    },
+    {
+      "name": "Registration attempt 1 reaches validation",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Registration attempt 2 reaches validation",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Registration attempt 3 reaches validation",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Registration attempt 4 reaches validation",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Registration attempt 5 reaches validation",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Registration attempt 6 reaches validation",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Registration attempt 7 reaches validation",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Registration attempt 8 reaches validation",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Registration attempt 9 reaches validation",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Registration attempt 10 reaches validation",
+      "actual": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "name": "Registration attempt 11: status",
+      "actual": 429,
+      "expected": 429,
+      "passed": true
+    },
+    {
+      "name": "Registration attempt 11: Retry-After",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Registration attempt 11: JSON error",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "Registration attempt 11: no-store",
+      "actual": "no-store",
+      "expected": "no-store",
+      "passed": true
+    },
+    {
+      "name": "CSRF endpoint still available",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "Anonymous profile still denied",
+      "actual": 401,
+      "expected": 401,
+      "passed": true
+    }
+  ],
+  "note": "Local single-instance HTTP checks using invalid credentials and invalid registration data. No accounts are created. Cookies, CSRF tokens and passwords are not recorded. Hosted proxy behaviour requires separate verification."
+}

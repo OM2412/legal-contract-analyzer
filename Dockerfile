@@ -12,7 +12,7 @@ COPY frontend/ ./
 RUN npm run build
 
 
-# Run backend tests and package the React build in the Spring Boot JAR.
+# Run backend tests and package the React build.
 FROM maven:3.9.16-eclipse-temurin-25-noble AS backend-build
 
 RUN apt-get update \
@@ -32,7 +32,7 @@ COPY --from=frontend-build /frontend/dist ./frontend/dist
 RUN mvn -B package
 
 
-# Keep only the Java runtime, application JAR, and OCR tools.
+# Run the packaged application with OCR support.
 FROM eclipse-temurin:25-jre-noble
 
 RUN apt-get update \
@@ -47,6 +47,11 @@ COPY --from=backend-build \
     /app/target/legal-contract-analyzer-0.1.0-SNAPSHOT-exec.jar \
     /app/app.jar
 
+COPY scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
+
+# Ensure the shell script runs even if Windows saved it with CRLF endings.
+RUN sed -i 's/\r$//' /app/docker-entrypoint.sh
+
 USER 10001
 
-ENTRYPOINT ["sh", "-c", "exec java -jar /app/app.jar --server.address=0.0.0.0 --server.port=${PORT:-8080} --folio.ai.enabled=${FOLIO_AI_ENABLED:-false}"]
+ENTRYPOINT ["sh", "/app/docker-entrypoint.sh"]

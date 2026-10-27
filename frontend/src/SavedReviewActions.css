@@ -1,0 +1,188 @@
+.archive-review-tile {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.archive-review-tile > .archive-card {
+  width: 100%;
+  flex: 1;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+}
+
+.archive-review-tile__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 4px;
+}
+
+.archive-delete-trigger {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #8b3550;
+  border-radius: 10px;
+  background: #fff1ef;
+  color: #782b43;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.archive-delete-trigger:hover {
+  background: #ffe1dc;
+}
+
+.archive-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-block: 20px;
+}
+
+.archive-loading .fui-moon,
+.archive-action .fui-moon {
+  width: 26px;
+  height: 26px;
+}
+
+.archive-success {
+  padding: 15px 18px;
+  border: 1px solid #50672a;
+  border-radius: 12px;
+  background: #e6f5c4;
+  color: #2f4516;
+  line-height: 1.6;
+}
+
+.archive-delete-dialog {
+  box-sizing: border-box;
+  width: min(540px, calc(100% - 32px));
+  max-height: calc(100svh - 40px);
+  padding: clamp(24px, 4vw, 38px);
+  overflow-y: auto;
+  border: 2px solid #18213a;
+  border-radius: 24px;
+  background: #fffdf8;
+  color: #18213a;
+  box-shadow: 8px 8px 0 #cbbaff;
+}
+
+.archive-delete-dialog::backdrop {
+  background: #131326c9;
+  backdrop-filter: blur(5px);
+}
+
+.archive-delete-dialog__icon {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  margin-bottom: 24px;
+  border: 1.5px solid #18213a;
+  border-radius: 17px;
+  background: #d7c8ff;
+  box-shadow: 3px 3px 0 #18213a;
+  transform: rotate(-7deg);
+}
+
+.archive-delete-dialog__eyebrow {
+  color: #605096;
+  font: 800 10px/1.6 monospace;
+  letter-spacing: 0.08em;
+}
+
+.archive-delete-dialog h2 {
+  margin: 14px 0;
+  color: #18213a;
+  font-size: clamp(1.7rem, 4vw, 2.2rem);
+  line-height: 1.12;
+  letter-spacing: -0.045em;
+}
+
+.archive-delete-dialog > p {
+  color: #535d73;
+  line-height: 1.8;
+}
+
+.archive-delete-dialog__files {
+  display: grid;
+  gap: 7px;
+  margin-block: 22px;
+  padding: 16px;
+  border: 1px solid #18213a26;
+  border-radius: 12px;
+  background: #eee7ff;
+  overflow-wrap: anywhere;
+}
+
+.archive-delete-dialog__files span {
+  font-size: 0.85rem;
+  color: #535d73;
+}
+
+.archive-delete-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.archive-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 48px;
+  padding: 11px 16px;
+  border: 1.5px solid #18213a;
+  border-radius: 11px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.archive-action--keep {
+  background: #eee7ff;
+  color: #18213a;
+}
+
+.archive-action--danger {
+  background: #ffd0c3;
+  color: #63263b;
+}
+
+.archive-action:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.archive-delete-trigger:focus-visible,
+.archive-action:focus-visible {
+  outline: 3px solid #6750bd;
+  outline-offset: 4px;
+}
+
+.archive-actions-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .archive-delete-dialog__actions {
+    flex-direction: column;
+  }
+
+  .archive-action {
+    width: 100%;
+  }
+}
