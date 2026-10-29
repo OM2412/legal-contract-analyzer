@@ -2,7 +2,8 @@
 FROM node:24-bookworm-slim AS frontend-build
 
 WORKDIR /frontend
-ARG VITE_AI_ENABLED=false
+ARG VITE_AI_ENABLED=true
+
 ENV VITE_AI_ENABLED=${VITE_AI_ENABLED}
 
 COPY frontend/package.json frontend/package-lock.json ./
