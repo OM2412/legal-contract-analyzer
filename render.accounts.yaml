@@ -33,7 +33,7 @@ services:
         sync: false
 
       - key: FOLIO_AI_ENABLED
-        value: "false"
+        value: "true"
 
       - key: FOLIO_PASSWORD_RESET_ENABLED
         value: "false"
