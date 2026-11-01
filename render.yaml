@@ -14,3 +14,12 @@ services:
         sync: false
       - key: FOLIO_AI_ENABLED
         value: "true"
+
+      - key: FOLIO_OLLAMA_URL
+        sync: false
+
+      - key: FOLIO_OLLAMA_API_KEY
+        sync: false
+
+      - key: FOLIO_OLLAMA_MODEL
+        value: qwen3:4b

@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -20,7 +21,12 @@ public final class LocalOllamaClient {
 
     private final RestClient client;
 
-    public LocalOllamaClient() {
+    public LocalOllamaClient(
+            @Value("${folio.ollama.url:http://127.0.0.1:11434}")
+            String ollamaUrl,
+            @Value("${folio.ollama.model:qwen3:4b}") String model,
+            @Value("${folio.ollama.api-key:}") String apiKey
+    ) {
         HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .build();
@@ -29,11 +35,20 @@ public final class LocalOllamaClient {
                 new JdkClientHttpRequestFactory(httpClient);
         factory.setReadTimeout(Duration.ofSeconds(180));
 
-        client = RestClient.builder()
-                .baseUrl("http://127.0.0.1:11434")
-                .requestFactory(factory)
-                .build();
+        RestClient.Builder builder = RestClient.builder()
+                .baseUrl(ollamaUrl)
+                .requestFactory(factory);
+        if (!apiKey.isBlank()) {
+            builder.defaultHeader(
+                    "Authorization",
+                    "Bearer " + apiKey
+            );
+        }
+        client = builder.build();
+        this.model = model;
     }
+
+    private final String model;
 
     public String suggestPaymentQuotes(SourceDocument document) {
         Objects.requireNonNull(document, "document");
@@ -94,7 +109,7 @@ public final class LocalOllamaClient {
 
     private String askForJson(String instruction, String text) {
         Map<String, Object> request = Map.of(
-                "model", "qwen3:4b",
+                "model", model,
                 "stream", false,
                 "think", false,
                 "format", "json",

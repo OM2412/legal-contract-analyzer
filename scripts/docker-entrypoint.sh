@@ -19,4 +19,7 @@ fi
 exec java -jar /app/app.jar \
     --server.address=0.0.0.0 \
     --server.port="${PORT:-8080}" \
-    --folio.ai.enabled="${FOLIO_AI_ENABLED:-false}"
+    --folio.ai.enabled="${FOLIO_AI_ENABLED:-false}" \
+    --folio.ollama.url="${FOLIO_OLLAMA_URL:-http://127.0.0.1:11434}" \
+    --folio.ollama.model="${FOLIO_OLLAMA_MODEL:-qwen3:4b}" \
+    --folio.ollama.api-key="${FOLIO_OLLAMA_API_KEY:-}"
