@@ -23,7 +23,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-ENV FOLIO_AI_ENABLED=false
+ENV FOLIO_AI_ENABLED=true
 
 COPY pom.xml ./
 COPY src ./src
