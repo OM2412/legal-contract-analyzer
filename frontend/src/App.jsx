@@ -76,7 +76,7 @@ function resetTokenFromHash() {
   )?.[1] ?? ''
 }
 
-function WorkspaceFrame({ view, children }) {
+function WorkspaceFrame({ view, children, onSignOut }) {
   const [eyebrow, title] = TITLES[view] ?? TITLES.workspace
 
   const Content = ['archive', 'ai-studio'].includes(view)
@@ -130,6 +130,9 @@ function WorkspaceFrame({ view, children }) {
             Home
             <FolioIcon name="arrow" size={17} />
           </a>
+          <button type="button" className="app-frame__sign-out" onClick={onSignOut}>
+            Sign out
+          </button>
         </div>
       </header>
 
@@ -211,8 +214,10 @@ function App() {
   const [accountStatus, setAccountStatus] = useState('checking')
   const [resetToken, setResetToken] = useState(resetTokenFromHash)
   const [recoveryEntry, setRecoveryEntry] = useState(0)
+  const [signOutError, setSignOutError] = useState('')
 
   const authRevision = useRef(0)
+  const signOutBusy = useRef(false)
 
   useEffect(() => {
     let active = true
@@ -303,6 +308,10 @@ function App() {
 
   function handleAuthenticated() {
     authRevision.current += 1
+    setReview(null)
+    setReviewedFiles(null)
+    setReviewChecklist(emptyChecklist())
+    setAiSession(emptyAi())
     setAccountStatus('signed-in')
 
     const destination = viewFromHash()
@@ -315,6 +324,7 @@ function App() {
   }
 
   function handleReview(data, files) {
+    if (signOutBusy.current) return
     setReview(data)
     setReviewedFiles(files)
     setReviewChecklist(emptyChecklist())
@@ -324,6 +334,45 @@ function App() {
 
   function backToReview() {
     navigate(review ? 'review' : 'workspace')
+  }
+
+  async function handleSignOut() {
+    if (signOutBusy.current) return
+    signOutBusy.current = true
+    authRevision.current += 1
+    // Unmount private screens immediately, including uploads and source previews.
+    setReview(null)
+    setReviewedFiles(null)
+    setReviewChecklist(emptyChecklist())
+    setAiSession(emptyAi())
+    setResetToken('')
+    setSignOutError('')
+    setAccountStatus('signing-out')
+    try {
+      const response = await apiFetch('/api/auth/logout', { method: 'POST' })
+      if (response.status !== 204 && response.status !== 401) {
+        throw new Error('Sign-out was not confirmed by the server.')
+      }
+      setAccountStatus('signed-out')
+      navigate('sign-in')
+    } catch {
+      setSignOutError('Private content has been cleared from this screen, but server sign-out could not be confirmed. Retry before leaving a shared device.')
+    } finally {
+      signOutBusy.current = false
+    }
+  }
+
+  if (accountStatus === 'signing-out') {
+    return (
+      <main className="app-session-check">
+        {signOutError ? (
+          <>
+            <p role="alert">{signOutError}</p>
+            <button type="button" onClick={handleSignOut}>Retry sign out</button>
+          </>
+        ) : <MoonLoader label="Signing out" />}
+      </main>
+    )
   }
 
   if (view === 'forgot' || view === 'reset') {
@@ -381,7 +430,14 @@ function App() {
   return (
     <>
       {view === 'site' && (
-        <HomePage accountStatus={accountStatus} />
+        <>
+          {accountStatus === 'signed-in' && (
+            <div className="app-frame__session-bar">
+              <button type="button" className="app-frame__sign-out" onClick={handleSignOut}>Sign out</button>
+            </div>
+          )}
+          <HomePage accountStatus={accountStatus} />
+        </>
       )}
 
       {accountStatus === 'signed-in' && (
@@ -389,7 +445,7 @@ function App() {
           className="app-frame"
           hidden={view === 'site'}
         >
-          <WorkspaceFrame view={view}>
+          <WorkspaceFrame view={view} onSignOut={handleSignOut}>
             <div
               className="app-route"
               hidden={view !== 'workspace'}

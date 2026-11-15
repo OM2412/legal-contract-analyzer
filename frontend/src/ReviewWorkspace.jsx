@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { apiFetch } from './apiClient'
 
 const MAX_PDF_BYTES = 10 * 1024 * 1024
@@ -114,6 +114,11 @@ function ReviewWorkspace({ onReview }) {
   const [maxDays, setMaxDays] = useState('30')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const request = useRef(null)
+
+  useEffect(() => () => {
+    request.current?.abort()
+  }, [])
 
   function handleFileChange(name, file) {
     setFiles((current) => ({ ...current, [name]: file }))
@@ -122,6 +127,7 @@ function ReviewWorkspace({ onReview }) {
 
   async function handleSubmit(event) {
     event.preventDefault()
+    if (request.current) return
     setError('')
 
     const agreementError = validateFile(files.agreement)
@@ -147,14 +153,18 @@ function ReviewWorkspace({ onReview }) {
     upload.append('sow', files.sow)
     upload.append('maxDays', String(days))
 
+    const controller = new AbortController()
+    request.current = controller
     setSubmitting(true)
     try {
       const response = await apiFetch('/api/review', {
         method: 'POST',
         body: upload,
+        signal: controller.signal,
       })
 
       const data = await response.json().catch(() => ({}))
+      if (controller.signal.aborted) return
 
       if (!response.ok) {
         throw new Error(data.error || 'These documents could not be reviewed.')
@@ -165,13 +175,15 @@ function ReviewWorkspace({ onReview }) {
         sow: files.sow,
       })
     } catch (caught) {
+      if (controller.signal.aborted) return
       setError(
         caught instanceof TypeError
           ? 'Could not connect to the review service. Please try again.'
           : caught.message
       )
     } finally {
-      setSubmitting(false)
+      if (request.current === controller) request.current = null
+      if (!controller.signal.aborted) setSubmitting(false)
     }
   }
 

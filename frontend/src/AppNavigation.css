@@ -77,6 +77,29 @@
   box-shadow: 3px 3px 0 #17213b;
 }
 
+.app-frame__session-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 24px;
+  background: #fffdf8;
+}
+
+.app-frame__sign-out {
+  border: 1px solid #17213b;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: #eee7ff;
+  color: #17213b;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.app-frame__sign-out:focus-visible {
+  outline: 3px solid #5146a5;
+  outline-offset: 4px;
+}
+
 .app-frame__home {
   display: inline-flex;
   align-items: center;
