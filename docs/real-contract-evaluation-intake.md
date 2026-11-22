@@ -26,3 +26,21 @@ These are public filings but **public access is not a blanket redistribution lic
 - A three-case synthetic success rate is not a generalization estimate.
 
 **Next decision gate:** Do not publish a real-world accuracy number until there are source-rights-cleared, independently labeled, genuinely unseen document pairs and a frozen evaluation protocol.
+
+## One-command private preparation
+
+The automated parts of source intake are now available:
+
+```bash
+node scripts/prepare-real-evaluation.mjs status
+```
+
+After a human reviews the reuse terms and manually separates legally usable **complete** agreement and SOW text files into `data/external/`, run the following with the actual paths (never use the public repository for raw third-party contract text by default):
+
+```bash
+FOLIO_REUSE_REVIEWED=yes node scripts/prepare-real-evaluation.mjs prepare SEC-UTI-2015-MSA-SOW1 data/external/uti/msa.txt data/external/uti/sow.txt
+```
+
+It validates UTF-8, the 1 MiB limit, private-directory location, distinct source files and SHA-256. It produces two separate **unlabeled** reviewer drafts under ignored `data/external/folio-evaluation/`. The drafts deliberately use `paymentObligations: null`, not `[]`, because an unreviewed source must never be scored as a negative contract.
+
+The human gate remains: two independent readers must complete and adjudicate labels before a frozen manifest can be constructed. Do not set `independentLabelsFrozen` to `true` merely because draft files exist. The current scoring and label-validation scripts are for a frozen, legally reusable and approved corpus only.

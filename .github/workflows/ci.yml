@@ -60,7 +60,9 @@ jobs:
         working-directory: frontend
 
       - name: Validate real-contract source intake
-        run: node scripts/validate-evaluation-candidates.mjs
+        run: |
+          node scripts/validate-evaluation-candidates.mjs
+          node scripts/prepare-real-evaluation.mjs status
 
       - name: Run backend tests and package
         run: mvn -B --no-transfer-progress verify
