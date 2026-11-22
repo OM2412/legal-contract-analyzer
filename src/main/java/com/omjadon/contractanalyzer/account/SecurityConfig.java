@@ -53,6 +53,7 @@ public class SecurityConfig {
                         "/assets/**",
                         "/favicon.svg",
                         "/icons.svg",
+                        "/api/health",
                         "/api/auth/csrf"
                 ).permitAll()
                 .requestMatchers(

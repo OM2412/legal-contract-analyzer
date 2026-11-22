@@ -23,6 +23,16 @@ function check(label, pass, detail) {
 }
 
 try {
+  const health = await request('/api/health')
+  check('Application and database ready', health.status === 200, `HTTP ${health.status}`)
+  if (health.status === 200) {
+    const status = await health.json()
+    check('Health reports UP', status.status === 'UP', status.status ?? 'missing')
+    check('Health response not cached',
+      health.headers.get('cache-control')?.includes('no-store'),
+      health.headers.get('cache-control') ?? 'missing')
+  }
+
   const home = await request('/')
   const html = await home.text()
   check('Public entrypoint', home.status === 200, `HTTP ${home.status}`)

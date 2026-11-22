@@ -64,6 +64,11 @@ async function documents() {
 }
 
 try {
+  const health = await expect(await request('/api/health'), 200, 'anonymous readiness endpoint')
+  const readiness = await health.json()
+  if (readiness.status !== 'UP' || readiness.database !== 'UP') {
+    throw new Error('Isolated database readiness check failed')
+  }
   await expect(await request('/api/auth/me'), 401, 'anonymous session rejected')
 
   await expect(await request('/api/auth/register', {

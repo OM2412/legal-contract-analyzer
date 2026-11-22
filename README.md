@@ -111,6 +111,23 @@ To see why AI suggestions are separate, upload `testdata/alternate-agreement.txt
 
 ## API
 
+### Deployment readiness and monitoring
+
+`GET /api/health` is a public, read-only readiness probe. It returns HTTP 200
+with `{"status":"UP","database":"UP"}` when the configured database is
+reachable, or HTTP 503 with a generic `DOWN` response when it is not. A
+database-free local demo reports `database: NOT_CONFIGURED`. The endpoint
+does not reveal connection details, AI keys, or document contents, and is
+always sent with `Cache-Control: no-store`.
+
+For read-only post-deployment verification, run
+`node scripts/smoke-public.mjs https://your-service.onrender.com`. It checks
+readiness, frontend assets, unauthorized archive access, CSRF and security
+headers without logging in or uploading contracts. Configure an external
+uptime monitor to request `/api/health` periodically and alert on HTTP 503,
+timeouts, or missing HTTP 200 responses. Folio does **not** yet configure
+external alert delivery or measure real-world AI quality through this probe.
+
 `POST /api/review` accepts multipart fields:
 
 - `agreement`: PDF or TXT file
