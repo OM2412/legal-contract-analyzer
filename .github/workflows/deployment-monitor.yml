@@ -1,0 +1,39 @@
+name: Folio public deployment monitor
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_url:
+        description: 'HTTPS URL of the deployed Folio app'
+        required: true
+        type: string
+  schedule:
+    # GitHub schedules are best-effort, not guaranteed real-time alerts.
+    - cron: '17 */6 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      DEPLOYMENT_URL: ${{ inputs.deployment_url || vars.FOLIO_PUBLIC_URL }}
+    steps:
+      - name: Check monitor configuration
+        run: |
+          if [ -z "$DEPLOYMENT_URL" ]; then
+            echo 'FOLIO_PUBLIC_URL is not configured. Set the repository Actions variable to enable scheduled monitoring.'
+            exit 1
+          fi
+          case "$DEPLOYMENT_URL" in
+            https://*) ;;
+            *) echo 'Only HTTPS deployment URLs are supported.'; exit 1 ;;
+          esac
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify public app, database readiness and security headers
+        run: node scripts/smoke-public.mjs "$DEPLOYMENT_URL"

@@ -128,6 +128,15 @@ uptime monitor to request `/api/health` periodically and alert on HTTP 503,
 timeouts, or missing HTTP 200 responses. Folio does **not** yet configure
 external alert delivery or measure real-world AI quality through this probe.
 
+The `Folio public deployment monitor` GitHub Action runs the public smoke check
+every six hours and can also be launched manually with a deployment URL. Set
+the repository **Actions variable** `FOLIO_PUBLIC_URL` to the exact HTTPS
+deployment address before relying on its schedule. An unset URL intentionally
+fails the job rather than reporting false success. Enable GitHub Actions
+failure notifications (or a separate on-call notifier) for an actual alert;
+the workflow alone does not guarantee email/SMS delivery or minute-level
+uptime monitoring. It makes no authenticated or destructive requests.
+
 `POST /api/review` accepts multipart fields:
 
 - `agreement`: PDF or TXT file
