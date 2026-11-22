@@ -97,6 +97,51 @@ try {
     throw new Error('Invalid AI suggestions response')
   }
 
+  // Labeled synthetic *candidate retrieval* baseline, not real-world AI accuracy.
+  const cases = [
+    { file: 'agreement.txt', days: 30, unit: 'CALENDAR_DAYS' },
+    { file: 'variant-agreement.txt', days: 45, unit: 'CALENDAR_DAYS' },
+    { file: 'business-days-agreement.txt', days: 30, unit: 'BUSINESS_DAYS' },
+  ]
+  let candidateHits = 0
+  let exactQuotes = 0
+  let quoteCount = 0
+  for (const sample of cases) {
+    const source = (await readFile(`testdata/${sample.file}`)).toString('utf8')
+    const form = new FormData()
+    form.append('document', new Blob([source], { type: 'text/plain' }), sample.file)
+    const response = await expect(await request('/api/ai/quotes', {
+      method: 'POST', secure: true, body: form,
+    }), 200, `synthetic AI fixture: ${sample.file}`)
+    const data = await response.json()
+    for (const item of data.evidence || []) {
+      quoteCount++
+      if (source.includes(item.quote)) exactQuotes++
+    }
+    if ((data.candidates || []).some(item =>
+      item.days === sample.days && item.dayUnit === sample.unit)) candidateHits++
+  }
+  console.log(`SYNTHETIC AI BASELINE: candidate-hit ${candidateHits}/${cases.length}; verbatim evidence ${exactQuotes}/${quoteCount}`)
+  if (exactQuotes !== quoteCount) throw new Error('Non-verbatim AI evidence detected')
+
+  // Small bounded concurrency probe. Never target production or call it a load capacity SLA.
+  const latencies = []
+  for (let batch = 0; batch < 4; batch++) {
+    await Promise.all(Array.from({ length: 3 }, async () => {
+      const start = performance.now()
+      const response = await request('/api/review', {
+        method: 'POST', secure: true, body: await documents(),
+      })
+      if (response.status !== 200) throw new Error(`Concurrent review returned HTTP ${response.status}`)
+      const result = await response.json()
+      if (!result.reviewStatus) throw new Error('Concurrent review result incomplete')
+      latencies.push(Math.round(performance.now() - start))
+    }))
+  }
+  const ordered = latencies.toSorted((a, b) => a - b)
+  const p95 = ordered[Math.ceil(0.95 * ordered.length) - 1]
+  console.log(`ISOLATED CONCURRENCY: ${latencies.length}/${latencies.length} succeeded; 3 at a time; p50=${ordered[Math.floor(ordered.length / 2)]}ms; p95=${p95}ms`)
+
   const saved = await expect(await request('/api/reviews', {
     method: 'POST', secure: true, body: await documents(),
   }), 201, 'save review')
