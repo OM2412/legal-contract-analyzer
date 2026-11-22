@@ -82,6 +82,24 @@ try {
   const me = await expect(await request('/api/auth/me'), 200, 'authenticated session')
   if ((await me.json()).email !== email) throw new Error('Session user mismatch')
 
+  // Negative-path security checks: requests still carry the authenticated cookie.
+  // An unsafe request without its anti-CSRF header must never reach the controller.
+  await expect(await request('/api/review', {
+    method: 'POST', body: await documents(),
+  }), 403, 'authenticated mutation without CSRF rejected')
+
+  const unsupported = await documents()
+  unsupported.set('agreement', new Blob(['not a supported document']), 'payload.exe')
+  await expect(await request('/api/review', {
+    method: 'POST', secure: true, body: unsupported,
+  }), 400, 'unsupported upload rejected')
+
+  const invalidPolicy = await documents()
+  invalidPolicy.set('maxDays', '0')
+  await expect(await request('/api/review', {
+    method: 'POST', secure: true, body: invalidPolicy,
+  }), 400, 'out-of-range policy rejected')
+
   const review = await expect(await request('/api/review', {
     method: 'POST', secure: true, body: await documents(),
   }), 200, 'analyze synthetic documents')
@@ -180,6 +198,31 @@ try {
   }
 
   await expect(await request(`/api/reviews/${savedReview.id}`), 200, 'retrieve own review')
+
+  // Verify user-owned data remains private across independent sessions.
+  await expect(await request('/api/auth/logout', { method: 'POST', secure: true }), 204, 'logout first user')
+  const otherEmail = `folio-e2e-${randomUUID()}@example.invalid`
+  const otherPassword = `Folio-test-${randomUUID()}!`
+  await expect(await request('/api/auth/register', {
+    method: 'POST', secure: true,
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email: otherEmail, displayName: 'Folio Other CI Tester', password: otherPassword }),
+  }), 201, 'register independent test account')
+  await expect(await request('/api/auth/login', {
+    method: 'POST', secure: true,
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ email: otherEmail, password: otherPassword }),
+  }), 200, 'login independent test account')
+  await expect(await request(`/api/reviews/${savedReview.id}`), 404, 'cross-account review read rejected')
+  await expect(await request(`/api/reviews/${savedReview.id}`, {
+    method: 'DELETE', secure: true,
+  }), 404, 'cross-account review deletion rejected')
+  await expect(await request('/api/auth/logout', { method: 'POST', secure: true }), 204, 'logout independent test account')
+  await expect(await request('/api/auth/login', {
+    method: 'POST', secure: true,
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ email, password }),
+  }), 200, 'restore original test account')
   await expect(await request(`/api/reviews/${savedReview.id}`, {
     method: 'DELETE', secure: true,
   }), 204, 'delete test review')
