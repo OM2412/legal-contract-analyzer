@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "status": "SOURCE_DISCOVERY_ONLY_NOT_LABELED",
+  "sources": [
+    {
+      "id": "SEC-UTI-2015-MSA-SOW1",
+      "publisher": "U.S. Securities and Exchange Commission EDGAR",
+      "url": "https://www.sec.gov/Archives/edgar/data/1124827/000119312515116229/d849038dex1040.htm",
+      "type": "Single filed exhibit containing an MSA and Statement of Work #1",
+      "msaLocator": "FORM OF MASTER SERVICES AGREEMENT; Section 2 Compensation",
+      "sowLocator": "Statement of Work #1 to Master Services Agreement; Compensation",
+      "pairingVerified": true,
+      "completeSourceTextPrepared": false,
+      "reusePermissionVerified": false,
+      "independentLabelsFrozen": false,
+      "notes": "Public SEC filing; contains parties and confidentiality markings. Do not redistribute the full text without reviewing reuse rights."
+    },
+    {
+      "id": "SEC-SUNLIFE-SE2-2013-MSA-SOW",
+      "publisher": "U.S. Securities and Exchange Commission EDGAR",
+      "url": "https://www.sec.gov/Archives/edgar/data/1074760/000119312515155139/d892742dex99i2.htm",
+      "type": "Filed Master Services Agreement with appended Statement of Work",
+      "msaLocator": "Master Services Agreement; payment and conflicts provisions",
+      "sowLocator": "Statement of Work effective November 1, 2013; Charges and Invoicing",
+      "pairingVerified": true,
+      "completeSourceTextPrepared": false,
+      "reusePermissionVerified": false,
+      "independentLabelsFrozen": false,
+      "notes": "Long, complex filing. Confirm the exact SOW scope and any omitted/confidential material before annotation."
+    }
+  ]
+}

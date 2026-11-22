@@ -59,6 +59,9 @@ jobs:
         run: npm run build
         working-directory: frontend
 
+      - name: Validate real-contract source intake
+        run: node scripts/validate-evaluation-candidates.mjs
+
       - name: Run backend tests and package
         run: mvn -B --no-transfer-progress verify
         env:
