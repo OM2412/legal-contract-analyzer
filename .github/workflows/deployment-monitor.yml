@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      DEPLOYMENT_URL: ${{ inputs.deployment_url || vars.FOLIO_PUBLIC_URL }}
+      DEPLOYMENT_URL: ${{ inputs.deployment_url || vars.FOLIO_PUBLIC_URL || 'https://folio-c4no.onrender.com' }}
     steps:
       - name: Check monitor configuration
         run: |
