@@ -117,7 +117,9 @@ To see why AI suggestions are separate, upload `testdata/alternate-agreement.txt
 - `sow`: PDF or TXT file
 - `maxDays`: optional integer from 1 to 3650; defaults to 30
 
-`POST /api/ai/quotes` accepts one multipart field, `document`. It returns exact quote suggestions and any payment candidates that pass the quote checks. This endpoint requires local Ollama.
+`POST /api/ai/quotes` accepts one multipart field, `document`. It returns exact quote suggestions and any payment candidates that pass the quote checks. Configure `FOLIO_GEMINI_API_KEY` (and optionally `FOLIO_GEMINI_MODEL`, default `gemini-2.5-flash`) to use Google's Gemini Developer API from the server. Gemini takes precedence over Ollama when both are configured. Never place the key in Vite/browser environment variables or Git.
+
+When hosted AI is configured, the server sends extracted document text to the external provider. Use only documents for which this processing is authorized; review the provider's data-use terms before enabling it. If the model is unavailable or returns unusable quotes, deterministic evidence-checked extraction remains available. On Render, without a configured model endpoint/key, the fallback runs immediately; a failing configured model has a brief timeout and retry cooldown. This fallback is **not** generative AI.
 
 ## Current limits
 

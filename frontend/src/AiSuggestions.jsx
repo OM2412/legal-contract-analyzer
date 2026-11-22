@@ -14,7 +14,7 @@ async function requestSuggestions(file, signal) {
   const data = await response.json()
 
   if (!response.ok) {
-    throw new Error(data.error || 'Local AI request failed.')
+    throw new Error(data.error || 'Quote suggestion request failed.')
   }
 
   return data
@@ -130,7 +130,7 @@ function AiSuggestions({
     updateSession({
       agreementData: null,
       sowData: null,
-      progress: 'Checking Agreement with local AI...',
+      progress: 'Checking Agreement for payment quotes...',
       error: '',
     })
 
@@ -144,7 +144,7 @@ function AiSuggestions({
 
       updateSession({
         agreementData: agreement,
-        progress: 'Checking Statement of Work with local AI...',
+        progress: 'Checking Statement of Work for payment quotes...',
       })
 
       const sow = await requestSuggestions(
@@ -166,7 +166,7 @@ function AiSuggestions({
         })
       } else {
         updateSession({
-          error: requestError.message || 'Local AI request failed.',
+          error: requestError.message || 'Quote suggestion request failed.',
           progress: '',
         })
       }
@@ -186,7 +186,7 @@ function AiSuggestions({
     >
       <div className="ai-suggestions-heading">
         <div>
-          <span className="eyebrow">OPTIONAL LOCAL AI</span>
+          <span className="eyebrow">OPTIONAL QUOTE DISCOVERY</span>
           <h3 id="ai-suggestions-heading">
             Quote suggestions
           </h3>
@@ -203,8 +203,14 @@ function AiSuggestions({
       </div>
 
       <p>
-        The local model suggests passages. These suggestions do
-        not change the rule-based review or determine legal priority.
+        Suggestions use a configured language model when available,
+        with evidence-checked rule-based extraction as a fallback.
+        They do not change the primary review or determine legal priority.
+      </p>
+      <p>
+        When hosted AI is enabled, extracted text from both uploaded
+        documents is sent to the configured AI provider for processing.
+        Do not upload confidential contracts without permission.
       </p>
 
       {busy && (

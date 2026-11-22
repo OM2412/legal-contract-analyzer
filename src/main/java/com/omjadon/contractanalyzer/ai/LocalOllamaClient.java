@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.http.MediaType;
@@ -27,6 +28,7 @@ public final class LocalOllamaClient {
     private static final int MAX_QUOTE_CODE_POINTS = 1_200;
     private static final int MAX_RESPONSE_CHARS = 20_000;
     private static final int MAX_QUOTES = 5;
+    private static final long RETRY_AFTER_FAILURE_MS = 60_000;
     private static final JsonMapper JSON = JsonMapper.builder().build();
 
     private static final Pattern PAYMENT_CLAUSE_PATTERN = Pattern.compile(
@@ -56,13 +58,33 @@ public final class LocalOllamaClient {
 
     private final RestClient client;
     private final String modelName;
+    private final RestClient geminiClient;
+    private final String geminiModel;
+    private final boolean useGemini;
+    private final boolean useRemoteModel;
+    private final AtomicLong retryAfter = new AtomicLong(0);
 
     public LocalOllamaClient() {
+        String geminiKey = configuredValue(
+                "folio.gemini.api-key", "FOLIO_GEMINI_API_KEY"
+        );
+        this.useGemini = geminiKey != null;
+        String configuredGeminiModel = configuredValue(
+                "folio.gemini.model", "FOLIO_GEMINI_MODEL"
+        );
+        this.geminiModel = configuredGeminiModel == null
+                ? "gemini-2.5-flash" : configuredGeminiModel;
+
         String baseUrl = configuredValue(
                 "folio.ollama.url",
                 "FOLIO_OLLAMA_URL",
                 "FOLIO_OLLAMA_BASE_URL"
         );
+        // Render's free web container does not include an Ollama daemon.
+        // Without a deliberately configured remote endpoint, use the local,
+        // evidence-verified extraction path immediately.
+        this.useRemoteModel = useGemini || baseUrl != null
+                || System.getenv("RENDER") == null;
         if (baseUrl == null) {
             baseUrl = "http://127.0.0.1:11434";
         }
@@ -84,7 +106,7 @@ public final class LocalOllamaClient {
 
         JdkClientHttpRequestFactory factory =
                 new JdkClientHttpRequestFactory(httpClient);
-        factory.setReadTimeout(Duration.ofSeconds(60));
+        factory.setReadTimeout(Duration.ofSeconds(15));
 
         this.client = RestClient.builder()
                 .baseUrl(baseUrl)
@@ -96,6 +118,13 @@ public final class LocalOllamaClient {
                     }
                 })
                 .build();
+        this.geminiClient = useGemini
+                ? RestClient.builder()
+                        .baseUrl("https://generativelanguage.googleapis.com")
+                        .requestFactory(factory)
+                        .defaultHeader("x-goog-api-key", geminiKey)
+                        .build()
+                : null;
     }
 
     public String suggestPaymentQuotes(SourceDocument document) {
@@ -120,16 +149,16 @@ public final class LocalOllamaClient {
                 Do not paraphrase, infer missing terms, or decide legal priority.
                 """;
 
-        try {
-            String rawJson = askForJson(instruction, text);
-            List<String> validOllamaQuotes = extractValidVerbatimQuotes(text, rawJson);
-            if (!validOllamaQuotes.isEmpty()) {
-                return quotesJson(validOllamaQuotes);
+        if (modelReady()) {
+            try {
+                String rawJson = askForJson(instruction, text);
+                List<String> validOllamaQuotes = extractValidVerbatimQuotes(text, rawJson);
+                if (!validOllamaQuotes.isEmpty()) {
+                    return quotesJson(validOllamaQuotes);
+                }
+            } catch (Exception ignored) {
+                retryAfter.set(System.currentTimeMillis() + RETRY_AFTER_FAILURE_MS);
             }
-        } catch (Exception ignored) {
-            // Fall through to deterministic verbatim quote extraction when local Ollama
-            // is unavailable (e.g., on Render cloud preview or when local daemon is stopped)
-            // or when model output fails strict verbatim verification.
         }
 
         return buildFallbackQuotesJson(text);
@@ -164,20 +193,29 @@ public final class LocalOllamaClient {
                 Do not infer missing values or decide legal priority.
                 """;
 
-        try {
-            String rawJson = askForJson(instruction, verifiedQuote);
-            String cleaned = cleanJsonText(rawJson);
-            if (isValidPaymentDetailsJson(cleaned)) {
-                return cleaned;
+        if (modelReady()) {
+            try {
+                String rawJson = askForJson(instruction, verifiedQuote);
+                String cleaned = cleanJsonText(rawJson);
+                if (isValidPaymentDetailsJson(cleaned)) {
+                    return cleaned;
+                }
+            } catch (Exception ignored) {
+                retryAfter.set(System.currentTimeMillis() + RETRY_AFTER_FAILURE_MS);
             }
-        } catch (Exception ignored) {
-            // Fall through to deterministic detail extraction when local Ollama is offline.
         }
 
         return buildFallbackDetailsJson(verifiedQuote);
     }
 
+    private boolean modelReady() {
+        return useRemoteModel && System.currentTimeMillis() >= retryAfter.get();
+    }
+
     private String askForJson(String instruction, String text) {
+        if (useGemini) {
+            return askGeminiForJson(instruction, text);
+        }
         Map<String, Object> request = Map.of(
                 "model", modelName,
                 "stream", false,
@@ -214,6 +252,44 @@ public final class LocalOllamaClient {
         }
 
         return cleanJsonText(content);
+    }
+
+    private String askGeminiForJson(String instruction, String text) {
+        Map<String, Object> request = Map.of(
+                "systemInstruction", Map.of(
+                        "parts", List.of(Map.of("text", instruction))
+                ),
+                "contents", List.of(Map.of(
+                        "role", "user",
+                        "parts", List.of(Map.of("text", text))
+                )),
+                "generationConfig", Map.of(
+                        "responseMimeType", "application/json",
+                        "temperature", 0
+                )
+        );
+
+        Map<?, ?> response = geminiClient.post()
+                .uri("/v1beta/models/{model}:generateContent", geminiModel)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .retrieve()
+                .body(Map.class);
+
+        if (response == null
+                || !(response.get("candidates") instanceof List<?> candidates)
+                || candidates.isEmpty()
+                || !(candidates.get(0) instanceof Map<?, ?> first)
+                || !(first.get("content") instanceof Map<?, ?> content)
+                || !(content.get("parts") instanceof List<?> parts)
+                || parts.isEmpty()
+                || !(parts.get(0) instanceof Map<?, ?> part)
+                || !(part.get("text") instanceof String raw)
+                || raw.isBlank()
+                || raw.length() > MAX_RESPONSE_CHARS) {
+            throw new IllegalStateException("AI provider returned an invalid response");
+        }
+        return cleanJsonText(raw);
     }
 
     private String cleanJsonText(String raw) {
