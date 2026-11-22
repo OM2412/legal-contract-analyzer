@@ -421,13 +421,13 @@ findings.addAll(
                 .body(Map.of("error", error.getMessage()));
     }
     @ExceptionHandler(RestClientException.class)
-    public ResponseEntity<Map<String, String>> ollamaUnavailable(
+    public ResponseEntity<Map<String, String>> aiProviderUnavailable(
             RestClientException error
     ) {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(Map.of(
                         "error",
-                        "Local Ollama could not complete the request"
+                        "AI provider could not complete the request"
                 ));
     }
     private static SourceDocument readUpload(
