@@ -12,6 +12,20 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: folio
+          POSTGRES_USER: folio
+          POSTGRES_PASSWORD: folio_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U folio -d folio"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -49,3 +63,29 @@ jobs:
         run: mvn -B --no-transfer-progress verify
         env:
           FOLIO_AI_ENABLED: 'true'
+
+      - name: Start isolated app for end-to-end checks
+        env:
+          SPRING_PROFILES_ACTIVE: db
+          FOLIO_DB_JDBC_URL: jdbc:postgresql://127.0.0.1:5432/folio
+          FOLIO_DB_USER: folio
+          FOLIO_DB_PASSWORD: folio_test_password
+          FOLIO_AI_ENABLED: 'true'
+          RENDER: 'true'
+        run: |
+          java -jar target/legal-contract-analyzer-0.1.0-SNAPSHOT-exec.jar \
+            --server.address=127.0.0.1 --server.port=18080 \
+            > /tmp/folio-e2e-server.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:18080/api/auth/csrf > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          tail -n 100 /tmp/folio-e2e-server.log
+          exit 1
+
+      - name: Run authenticated document workflow
+        run: node scripts/smoke-authenticated.mjs http://127.0.0.1:18080
+        env:
+          FOLIO_E2E_ISOLATED_DB: 'true'
