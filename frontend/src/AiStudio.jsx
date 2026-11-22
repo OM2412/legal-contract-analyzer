@@ -121,7 +121,7 @@ function AiStudio({ files, session, onSessionChange, onBack }) {
       </header>
 
       <div className="ai-studio-intro">
-        <span className="eyebrow">LOCAL MODEL / SOURCE CHECK</span>
+        <span className="eyebrow">AI DISCOVERY / SOURCE CHECK</span>
         <h1>
           Explore the clause.
           <em> Inspect the source.</em>

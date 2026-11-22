@@ -39,17 +39,21 @@ function SuggestionGroup({ title, file, data, onInspect }) {
 
   return (
     <section className="ai-suggestion-group">
-      <h4>{title}</h4>
+      <div className="ai-suggestion-group-head">
+        <div><span className="eyebrow">DOCUMENT FINDINGS</span><h4>{title}</h4></div>
+        <span className="ai-count-pill">{quotes.length} {quotes.length === 1 ? 'quote' : 'quotes'}</span>
+      </div>
 
       {quotes.length === 0 && (
         <p>No exact payment quote suggestion returned.</p>
       )}
 
-      {quotes.map((item) => (
-        <div
+      {quotes.map((item, index) => (
+        <article
           className="ai-suggestion-quote"
           key={`${item.documentId}-${item.start}-${item.end}`}
         >
+          <div className="evidence-card-head"><span className="evidence-card-label">{String(index + 1).padStart(2, '0')} / Exact quote</span><span className="evidence-card-page">{item.firstPage ? `Page ${item.firstPage}` : 'Text source'}</span></div>
           <blockquote>{item.quote}</blockquote>
 
           <div className="result-evidence-bottom">
@@ -62,10 +66,10 @@ function SuggestionGroup({ title, file, data, onInspect }) {
               className="result-evidence-open"
               onClick={() => onInspect(file, item)}
             >
-              View original
+              Inspect source <span aria-hidden="true">↗</span>
             </button>
           </div>
-        </div>
+        </article>
       ))}
 
       {candidates.map((candidate) => (
@@ -76,17 +80,11 @@ function SuggestionGroup({ title, file, data, onInspect }) {
             `${candidate.evidence.end}-${candidate.days}`
           }
         >
-          <strong>
-            Suggested term: {candidate.days}{' '}
-            {candidate.dayUnit?.replaceAll('_', ' ').toLowerCase()}
-          </strong>
-
-          <p>
-            Invoice receipt:{' '}
-            {candidate.invoiceReceiptConfirmed
-              ? 'supported by the quote'
-              : 'not independently confirmed'}
-          </p>
+          <span className="eyebrow">MODEL-EXTRACTED CANDIDATE</span>
+          <div className="ai-candidate-details">
+            <div><span>Payment term</span><strong>{candidate.days} {candidate.dayUnit?.replaceAll('_', ' ').toLowerCase()}</strong></div>
+            <div><span>Invoice trigger</span><strong>{candidate.invoiceReceiptConfirmed ? 'Source supported' : 'Not confirmed'}</strong></div>
+          </div>
         </div>
       ))}
     </section>
@@ -186,7 +184,7 @@ function AiSuggestions({
     >
       <div className="ai-suggestions-heading">
         <div>
-          <span className="eyebrow">OPTIONAL QUOTE DISCOVERY</span>
+          <span className="eyebrow">AI ASSISTED / EVIDENCE CHECK</span>
           <h3 id="ai-suggestions-heading">
             Quote suggestions
           </h3>
@@ -202,16 +200,15 @@ function AiSuggestions({
         </button>
       </div>
 
-      <p>
+      <div className="ai-guidance-card"><span className="ai-guidance-symbol" aria-hidden="true">i</span><div><strong>Suggestions, not a legal verdict</strong><p>
         Suggestions use a configured language model when available,
         with evidence-checked rule-based extraction as a fallback.
         They do not change the primary review or determine legal priority.
-      </p>
-      <p>
+      </p><p>
         When hosted AI is enabled, extracted text from both uploaded
         documents is sent to the configured AI provider for processing.
         Do not upload confidential contracts without permission.
-      </p>
+      </p></div></div>
 
       {busy && (
         <button
@@ -223,7 +220,7 @@ function AiSuggestions({
         </button>
       )}
 
-      {progress && <p role="status">{progress}</p>}
+      {progress && <p className="ai-progress-card" role="status">{busy && <span className="ai-progress-pulse" aria-hidden="true" />} {progress}</p>}
       {error && (
         <p className="result-warning" role="alert">
           {error}

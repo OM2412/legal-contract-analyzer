@@ -14,6 +14,7 @@ import { apiFetch } from './apiClient'
 import './App.css'
 import './SavedReviews.css'
 import './AppNavigation.css'
+import './FolioReviewPolish.css'
 
 const AI_ENABLED = import.meta.env.VITE_AI_ENABLED !== 'false'
 

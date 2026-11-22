@@ -29,9 +29,13 @@ function evidenceLocation(item) {
   ].filter(Boolean).join(' | ')
 }
 
-function EvidenceItem({ item, file, onInspect }) {
+function EvidenceItem({ item, file, onInspect, number, label = 'Verified source excerpt' }) {
   return (
-    <div className="result-evidence-item">
+    <article className="result-evidence-item">
+      <div className="evidence-card-head">
+        <span className="evidence-card-label">{number ? `${String(number).padStart(2, '0')} / ` : ''}{label}</span>
+        <span className="evidence-card-page">{item.firstPage ? `Page ${item.firstPage}` : 'Text source'}</span>
+      </div>
       <blockquote>{item.quote}</blockquote>
 
       <div className="result-evidence-bottom">
@@ -45,11 +49,11 @@ function EvidenceItem({ item, file, onInspect }) {
             className="result-evidence-open"
             onClick={() => onInspect(file, item)}
           >
-            View original
+            Inspect source <span aria-hidden="true">↗</span>
           </button>
         )}
       </div>
-    </div>
+    </article>
   )
 }
 
@@ -163,6 +167,7 @@ function DocumentResult({
         <div>
           <span className="eyebrow">{title}</span>
           <h3>{file?.name || title}</h3>
+          <span className="document-clause-count">{recognized.length} recognized {recognized.length === 1 ? 'clause' : 'clauses'}</span>
         </div>
         <span className="result-assessment">
           {readable(assessment)}
@@ -195,6 +200,7 @@ function DocumentResult({
             item={item}
             file={file}
             onInspect={onInspect}
+            number={index + 1}
           />
         </div>
       ))}
@@ -213,6 +219,7 @@ function DocumentResult({
               item={item}
               file={file}
               onInspect={onInspect}
+              label="Additional wording to verify"
             />
           ))}
         </div>
@@ -257,7 +264,8 @@ function ReviewResult({
       >
         <div className="page-container">
           <div className="result-topline">
-            <span className="eyebrow">YOUR DOCUMENT REVIEW</span>
+            <span className="eyebrow">FOLIO / DOCUMENT REVIEW REPORT</span>
+            <div className="result-actions">
             <button
               type="button"
               className="result-print"
@@ -276,8 +284,11 @@ function ReviewResult({
   checklist={checklist}
   onChange={onChecklistChange}
 />
+            </div>
           </div>
 
+          <div className="result-heading-row">
+            <div>
           <h2 id="result-heading">
             {readable(data.reviewStatus)}
           </h2>
@@ -286,6 +297,9 @@ function ReviewResult({
             Read each quote against the original document before
             relying on a result.
           </p>
+            </div>
+            <span className="result-report-chip"><span aria-hidden="true">●</span> Evidence-first report</span>
+          </div>
 
           {data.reviewReason && (
             <div className="result-alert" role="status">
@@ -295,7 +309,8 @@ function ReviewResult({
           )}
 
           <div className="result-summary">
-            <div>
+            <div className="result-summary-card result-summary-card--lime">
+              <span className="summary-card-index">01 / ANALYSIS</span>
               <span>TERM COMPARISON</span>
               <strong>{readable(data.comparisonStatus)}</strong>
               {data.comparisonExplanation && (
@@ -303,21 +318,26 @@ function ReviewResult({
               )}
             </div>
 
-            <div>
+            <div className="result-summary-card result-summary-card--blue">
+              <span className="summary-card-index">02 / PRIORITY</span>
               <span>PAYMENT PRIORITY SCAN</span>
               <strong>{readable(data.precedenceStatus)}</strong>
+              <p>Locate hierarchy wording and check the exact source.</p>
             </div>
 
-            <div>
+            <div className="result-summary-card result-summary-card--cream">
+              <span className="summary-card-index">03 / REFERENCE</span>
               <span>DEMO POLICY LIMIT</span>
               <strong>
                 {data.policyMaxDays ?? 30} calendar days
               </strong>
+              <p>Illustrative benchmark, not a legal determination.</p>
             </div>
           </div>
 
           <DurationChart data={data} />
 
+          <div className="result-section-heading"><div><span className="eyebrow">SOURCE-BACKED FINDINGS</span><h3>Document evidence</h3></div><span>Open a card to inspect its original passage.</span></div>
           <div className="result-documents">
             <DocumentResult
               title="AGREEMENT"
@@ -346,6 +366,8 @@ function ReviewResult({
             <span className="eyebrow">
               PAYMENT PRIORITY WORDING
             </span>
+            <h3>Which document takes priority?</h3>
+            <p className="result-precedence-intro">Source passages mentioning payment priority appear below. Interpret them against the complete signed documents.</p>
 
             {data.precedenceEvidence?.length ? (
               data.precedenceEvidence.map((item) => (
