@@ -7,7 +7,7 @@
       "id": "PAIR-001",
       "agreement": {
         "path": "testdata/product-evaluation/heldout/PAIR-001-agreement.txt",
-        "sha256": "285ca7acbb8e791c4b0dd5d5bdc74c03ddb056ac89e36e9be572c555178a6f73",
+        "sha256": "3caea13b027761de4b235cfdc48366c3207277988166095a22613a5e50b3eee9",
         "paymentObligations": [
           {
             "start": 37,
@@ -24,7 +24,7 @@
       },
       "sow": {
         "path": "testdata/product-evaluation/heldout/PAIR-001-sow.txt",
-        "sha256": "c971cc96352c3f390df0c746cb83bf6cf96a85983c53ad3028b5208cca5b692a",
+        "sha256": "461e4a1efec29dc953ecd0550f2d64188f5d460d9357ae6a4789bd500984878a",
         "paymentObligations": [
           {
             "start": 45,

@@ -1,7 +1,10 @@
 // End-to-end API check against an isolated test database, never production.
 // Run only when FOLIO_E2E_ISOLATED_DB=true is explicitly set.
-import { readFile } from 'node:fs/promises'
+import { readFile, mkdtemp, writeFile, rm } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
+import { execFileSync } from 'node:child_process'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 if (process.env.FOLIO_E2E_ISOLATED_DB !== 'true') {
   console.error('Refusing to run without FOLIO_E2E_ISOLATED_DB=true')
@@ -123,6 +126,29 @@ try {
   }
   console.log(`SYNTHETIC AI BASELINE: candidate-hit ${candidateHits}/${cases.length}; verbatim evidence ${exactQuotes}/${quoteCount}`)
   if (exactQuotes !== quoteCount) throw new Error('Non-verbatim AI evidence detected')
+
+  // Historical self-written workflow pilot: validates scoring plumbing, not a held-out metric.
+  const pilotForm = new FormData()
+  for (const role of ['agreement', 'sow']) {
+    const name = `PAIR-001-${role}.txt`
+    pilotForm.append(role, new Blob([await readFile(`testdata/product-evaluation/heldout/${name}`)],
+      { type: 'text/plain' }), name)
+  }
+  const pilotResponse = await expect(await request('/api/review', {
+    method: 'POST', secure: true, body: pilotForm,
+  }), 200, 'score historical paired-document pilot')
+  const pilotDirectory = await mkdtemp(join(tmpdir(), 'folio-scoring-'))
+  try {
+    await writeFile(join(pilotDirectory, 'PAIR-001.json'), JSON.stringify(await pilotResponse.json()))
+    const output = execFileSync(process.execPath, [
+      'scripts/score-product-review.mjs',
+      'testdata/product-evaluation/heldout/labels.json', pilotDirectory,
+    ], { encoding: 'utf8' })
+    const pilot = JSON.parse(output)
+    console.log(`HISTORICAL SELF-WRITTEN PILOT (NOT HELD-OUT): matched=${pilot.matched}/${pilot.goldObligations}; false-positives=${pilot.falsePositives}; misses=${pilot.misses}; status-errors=${pilot.statusErrors}`)
+  } finally {
+    await rm(pilotDirectory, { recursive: true, force: true })
+  }
 
   // Small bounded concurrency probe. Never target production or call it a load capacity SLA.
   const latencies = []
