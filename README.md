@@ -41,7 +41,7 @@
 - **Evidence before verdict:** Inspect exact quoted text, source offsets, PDF-page references and OCR provenance; the app flags unsupported or ambiguous wording for human review.
 - **Policy scenario:** Apply a user-selected illustrative invoice-payment limit (default **30 days**); this is a business rule, not a legal standard.
 - **Risk Studio:** Review narrow, evidence-led payment, termination and liability signals without pretending to resolve legal enforceability.
-- **Optional AI quote assistant:** Gemini Developer API or an Ollama-compatible endpoint can propose payment quotes. Source-matching and payment-detail checks screen candidates; AI does **not** silently override deterministic review results.
+- **Optional AI quote assistant:** Google Gemini Developer API can propose payment quotes. Source-matching and payment-detail checks screen candidates; AI does **not** silently override deterministic review results.
 - **Accounts and archive:** Register, log in, save, reopen, list and delete account-owned reviews with server-side access controls.
 - **Responsive React UI:** Review workspace, evidence inspection, structured findings, saved reviews and browser print/PDF export.
 
@@ -53,7 +53,7 @@ flowchart TD
     B --> C["Payment clause and risk-signal rules"]
     C --> D["Evidence-backed comparison + policy check"]
     D --> E["React review workspace"]
-    B --> F["Optional Gemini / Ollama quote suggestions"]
+    B --> F["Optional Gemini quote suggestions"]
     F --> G["Exact quote + detail verification"]
     G --> E
     E --> H["Account-scoped saved reviews"]
@@ -70,7 +70,7 @@ flowchart TD
 | Database | PostgreSQL, Spring Data JPA, Flyway migrations |
 | Authentication | Spring Security, session cookies, BCrypt password hashing, CSRF protection |
 | Document processing | Apache PDFBox, UTF-8 TXT, Tesseract OCR for supported scanned pages |
-| AI assistance | Optional Google Gemini Developer API or Ollama-compatible model endpoint; deterministic fallback |
+| AI assistance | Google Gemini Developer API for optional model-assisted quote discovery; deterministic fallback |
 | Delivery | Multi-stage Docker build, Render deployment, GitHub Actions |
 
 The Docker build compiles the Vite frontend, packages it with Spring Boot, and installs English Tesseract OCR in the runtime image.
@@ -83,7 +83,7 @@ The Docker build compiles the Vite frontend, packages it with Spring Boot, and i
 - **Node.js 24** and npm for frontend development
 - **PostgreSQL** for the authenticated database-backed workflow
 - Optional: **Tesseract OCR** for scanned PDFs
-- Optional: Gemini API key **or** a running Ollama-compatible model for model-assisted suggestions
+- Optional: Gemini Developer API key for model-assisted quote suggestions
 
 ### Backend tests
 
@@ -114,15 +114,11 @@ The command above is for POSIX shells. On PowerShell, quote the main-class prope
 
 A database-free demo mode is available for experimenting with document rules, but the complete **accounts and saved-review workflow requires PostgreSQL**. Use the `db` profile for the full product experience.
 
-### Optional local AI (Ollama)
+### Gemini AI configuration
 
-Start Ollama, then download a model such as:
+Folio's currently selected hosted AI provider is **Google Gemini Developer API**. Configure `FOLIO_AI_ENABLED=true` and the server-side `FOLIO_GEMINI_API_KEY` (optionally `FOLIO_GEMINI_MODEL`) in your deployment environment. Never expose the key in frontend variables or Git. If Gemini is unavailable, the evidence-checking deterministic fallback is **not an AI model response**.
 
-```bash
-ollama pull qwen3:4b
-```
-
-The default local endpoint is `http://127.0.0.1:11434`. For a hosted Ollama-compatible endpoint, configure `FOLIO_OLLAMA_URL` and, if required, `FOLIO_OLLAMA_API_KEY`. Hosted Render containers do **not** automatically include a running Ollama daemon.
+> The repository still contains legacy Ollama-compatible implementation code and configuration. It is not the active provider documented for this deployment; removing that code safely requires a separate tested refactor.
 
 ## Environment configuration
 
@@ -137,9 +133,6 @@ Set secrets in your deployment platform or local environment—**never in Git or
 | `FOLIO_AI_ENABLED` | Enables the optional AI feature on the server |
 | `FOLIO_GEMINI_API_KEY` | Server-side Gemini Developer API key |
 | `FOLIO_GEMINI_MODEL` | Optional Gemini model; code default: `gemini-2.5-flash` |
-| `FOLIO_OLLAMA_URL` | Optional Ollama-compatible model endpoint |
-| `FOLIO_OLLAMA_API_KEY` | Optional bearer token for a remote compatible endpoint |
-| `FOLIO_OLLAMA_MODEL` | Optional model; code default: `qwen3:4b` |
 | `FOLIO_DEMO_AUTH_ENABLED` | Optional *outer* HTTP Basic demo gate; keep `false` for the normal public sign-in page |
 | `FOLIO_PASSWORD_RESET_ENABLED` | Password reset capability; keep disabled unless fully configured and verified |
 | `FOLIO_PASSWORD_RECOVERY_WORKER_ENABLED` | Recovery worker; disabled by default in deployment examples |
@@ -147,7 +140,7 @@ Set secrets in your deployment platform or local environment—**never in Git or
 | `SERVER_SERVLET_SESSION_COOKIE_HTTP_ONLY` | Use `true` |
 | `SERVER_SERVLET_SESSION_COOKIE_SAME_SITE` | Example: `lax` |
 
-When both Gemini and Ollama are configured, **Gemini takes precedence**. Model requests can send extracted contract text to the configured external service; only enable them for documents whose processing is authorized. Check provider data-handling terms. Never publish connection strings, API keys, cookies or private uploads.
+The intended hosted AI provider is **Gemini**. Legacy Ollama compatibility remains in source code but is not required for the current deployment. Model requests can send extracted contract text to the configured external service; only enable them for documents whose processing is authorized. Check provider data-handling terms. Never publish connection strings, API keys, cookies or private uploads.
 
 ## Render deployment
 
