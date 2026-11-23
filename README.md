@@ -1,5 +1,9 @@
 # Folio — Evidence-first Contract Review
 
+> **Published live app:** [Folio on Render](https://folio-c4no.onrender.com/) · [Database readiness](https://folio-c4no.onrender.com/api/health) · [GitHub Actions](https://github.com/OM2412/legal-contract-analyzer/actions) · [Deployment monitor](https://github.com/OM2412/legal-contract-analyzer/actions/workflows/deployment-monitor.yml).  
+> **Validation boundary:** Synthetic/self-written tests are not an independent legal accuracy benchmark. Health checks don't verify Gemini response quality. Independent real-contract annotations and clearance are pending.
+
+
 **Folio** is a full-stack contract-review prototype for comparing payment obligations in a software-services **Agreement** and **Statement of Work (SOW)**. It combines deterministic clause extraction, traceable source evidence, a limited risk-signal workspace, optional model-assisted quote discovery, and account-scoped saved reviews.
 
 > **Important:** Folio is a decision-support prototype, **not legal advice**, a contract-signing authority, or a validated legal-risk classifier. A matched quote verifies what the document says—not whether the interpretation is legally correct. Always review the complete original contracts with qualified counsel when appropriate.
