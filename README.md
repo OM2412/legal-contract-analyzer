@@ -1,3 +1,28 @@
+<div align="center">
+
+# Folio — Evidence-first Contract Review
+
+**Compare Agreements and Statements of Work with traceable evidence, structured risk signals, and optional AI-assisted quote discovery.**
+
+[**Launch Folio**](https://folio-c4no.onrender.com/) · [**API Readiness**](https://folio-c4no.onrender.com/api/health) · [**Source Code**](https://github.com/OM2412/legal-contract-analyzer)
+
+![Java](https://img.shields.io/badge/Java-25-orange) ![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.1-green) ![React](https://img.shields.io/badge/React-19-blue) ![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue) ![Deploy](https://img.shields.io/badge/Hosting-Render-purple)
+
+</div>
+
+## Project at a glance
+
+| Challenge | Folio workflow |
+| --- | --- |
+| Agreement and SOW payment terms are difficult to compare | Extract supported payment clauses and inspect structured side-by-side findings |
+| AI answers can omit source context | Match quotations to source offsets and PDF pages before presenting them |
+| Different teams apply different payment expectations | Apply a user-selected, illustrative invoice-payment threshold |
+| Reviews are difficult to revisit | Save account-scoped reviews, reopen evidence and print a report |
+
+**Demo workflow:** Open [Folio](https://folio-c4no.onrender.com/) → sign in → upload **synthetic/nonconfidential** Agreement and SOW → review evidence and Risk Studio → optionally request AI quote suggestions → save/export the review.
+
+> **Limits:** Folio is a prototype, not legal advice. The Render address is the repository's documented public deployment; independently verified current uptime and model availability are not claimed.
+
 # Folio — Evidence-first Contract Review
 
 > **Published live app:** [Folio on Render](https://folio-c4no.onrender.com/) · [Database readiness](https://folio-c4no.onrender.com/api/health) · [GitHub Actions](https://github.com/OM2412/legal-contract-analyzer/actions) · [Deployment monitor](https://github.com/OM2412/legal-contract-analyzer/actions/workflows/deployment-monitor.yml).  
