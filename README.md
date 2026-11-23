@@ -1,162 +1,243 @@
-# Legal Contract Analyzer
+# Folio — Evidence-first Contract Review
 
-A local Java application that reviews payment terms in a software services Agreement and Statement of Work (SOW). It shows source quotes, compares supported terms, checks an illustrative payment policy, and offers locally generated AI suggestions.
+**Folio** is a full-stack contract-review prototype for comparing payment obligations in a software-services **Agreement** and **Statement of Work (SOW)**. It combines deterministic clause extraction, traceable source evidence, a limited risk-signal workspace, optional model-assisted quote discovery, and account-scoped saved reviews.
 
-## What it does
+> **Important:** Folio is a decision-support prototype, **not legal advice**, a contract-signing authority, or a validated legal-risk classifier. A matched quote verifies what the document says—not whether the interpretation is legally correct. Always review the complete original contracts with qualified counsel when appropriate.
 
-- Upload two text-based PDFs or UTF-8 TXT files.
-- Extract supported payment clauses and display their exact source quotes.
-- Compare Agreement and SOW payment terms.
-- Scan for supported wording about which document's payment term takes priority.
-- Check recognized terms against a configurable maximum-days policy.
-- Suggest additional payment quotes using a local Ollama model.
-- Show AI payment candidates only when their days and day unit match the source quote.
-- Print the review or save it as a PDF from the browser.
+**Live demo:** [folio-c4no.onrender.com](https://folio-c4no.onrender.com/) · **Source:** [GitHub](https://github.com/OM2412/legal-contract-analyzer)
 
-The rule-based review and AI suggestions are shown separately. AI suggestions do not change the review verdict automatically.
+## Highlights
 
-## Render deployment
+- **Paired-document comparison:** Upload Agreement and SOW as supported PDF or UTF-8 TXT files; compare payment periods, units, triggers, parties and scope where extractable.
+- **Evidence before verdict:** Inspect exact quoted text, source offsets, PDF-page references and OCR provenance; the app flags unsupported or ambiguous wording for human review.
+- **Policy scenario:** Apply a user-selected illustrative invoice-payment limit (default **30 days**); this is a business rule, not a legal standard.
+- **Risk Studio:** Review narrow, evidence-led payment, termination and liability signals without pretending to resolve legal enforceability.
+- **Optional AI quote assistant:** Gemini Developer API or an Ollama-compatible endpoint can propose payment quotes. Source-matching and payment-detail checks screen candidates; AI does **not** silently override deterministic review results.
+- **Accounts and archive:** Register, log in, save, reopen, list and delete account-owned reviews with server-side access controls.
+- **Responsive React UI:** Review workspace, evidence inspection, structured findings, saved reviews and browser print/PDF export.
 
-The repository currently contains three branches with different purposes:
+## How the system works
 
-| Branch | Purpose | Deployment notes |
-| --- | --- | --- |
-| `main` | Stable local/demo application | Uses `render.yaml`; it does not configure the external database profile. |
-| `feature/accounts-and-saved-reviews` | Accounts, sessions, saved reviews, and Neon PostgreSQL preview | Uses `render.accounts.yaml` and is the branch used by `folio-accounts-preview`. |
-| `security/release-hardening-01` | Release-security verification and hardening work | Review and validate this branch before promoting it to the preview or stable deployment. |
-
-### Deploy the accounts preview
-
-Create or update a Render Docker Web Service with:
-
-- Repository: `OM2412/legal-contract-analyzer`
-- Branch: `feature/accounts-and-saved-reviews`
-- Dockerfile: `./Dockerfile`
-- Docker context: `.`
-- Health-check path: `/`
-- Region: Singapore (or the region nearest the database)
-
-Set these environment variables in the Render Dashboard. Never commit their values:
-
-```text
-SPRING_PROFILES_ACTIVE=db
-FOLIO_DB_URL=postgresql://<user>:<password>@<host>/<database>?sslmode=require
-FOLIO_DB_USER=<database-user>
-FOLIO_DB_PASSWORD=<database-password>
-FOLIO_DEMO_AUTH_ENABLED=false
-FOLIO_DEMO_USERNAME=mentor
-FOLIO_DEMO_PASSWORD=<optional-unused-demo-gate-password>
-FOLIO_AI_ENABLED=false
-FOLIO_PASSWORD_RESET_ENABLED=false
-FOLIO_PASSWORD_RECOVERY_WORKER_ENABLED=false
-SERVER_SERVLET_SESSION_COOKIE_SECURE=true
-SERVER_SERVLET_SESSION_COOKIE_HTTP_ONLY=true
-SERVER_SERVLET_SESSION_COOKIE_SAME_SITE=lax
+```mermaid
+flowchart TD
+    A["Agreement + SOW uploads"] --> B["Validate files and extract text"]
+    B --> C["Payment clause and risk-signal rules"]
+    C --> D["Evidence-backed comparison + policy check"]
+    D --> E["React review workspace"]
+    B --> F["Optional Gemini / Ollama quote suggestions"]
+    F --> G["Exact quote + detail verification"]
+    G --> E
+    E --> H["Account-scoped saved reviews"]
 ```
 
-`FOLIO_DEMO_AUTH_ENABLED` must be `false` for a normal public website preview. When it is `true`, `DemoAccessFilter` rejects every request without HTTP Basic credentials, including `/`; the React login page cannot load and the service returns `401 Unauthorized`. This outer demo gate is separate from the application's account login. The application still protects authenticated API routes through Spring Security.
+**Review results and AI suggestions are separate paths.** The optional model assists discovery; it is not a legal decision engine. If no model is available, the server can return deterministic evidence-checked suggestions; that fallback is **not generative AI**.
 
-After changing environment variables or pushing a deployment commit:
+## Technology
 
-1. Save the variables and trigger **Manual Deploy > Deploy latest commit**.
-2. Wait for Render to show the service as **Live**.
-3. Check the root response:
+| Layer | Implementation |
+| --- | --- |
+| Frontend | React 19, Vite 8, JavaScript, CSS |
+| Backend | Java 25, Spring Boot, Maven |
+| Database | PostgreSQL, Spring Data JPA, Flyway migrations |
+| Authentication | Spring Security, session cookies, BCrypt password hashing, CSRF protection |
+| Document processing | Apache PDFBox, UTF-8 TXT, Tesseract OCR for supported scanned pages |
+| AI assistance | Optional Google Gemini Developer API or Ollama-compatible model endpoint; deterministic fallback |
+| Delivery | Multi-stage Docker build, Render deployment, GitHub Actions |
 
-   ```powershell
-   curl.exe -i https://<service-name>.onrender.com/
-   ```
+The Docker build compiles the Vite frontend, packages it with Spring Boot, and installs English Tesseract OCR in the runtime image.
 
-   A healthy public preview returns `200 OK`. A `401` response containing `WWW-Authenticate: Basic realm="Folio Demo"` means the outer demo gate is still enabled in Render or the service has not redeployed.
-4. Open the root URL in a private browser window and test registration/login before testing protected review and saved-review routes.
+## Quick start
 
-The Docker entrypoint validates `FOLIO_DB_URL`, derives the JDBC URL, binds Spring Boot to Render's `PORT`, and binds to `0.0.0.0`. If the service fails before responding, inspect the Render deploy logs for database URL format, Flyway migration, or missing environment-variable errors. Do not paste passwords, connection strings, cookies, or session values into issue reports.
+### Prerequisites
 
-## Requirements
+- **Java 25** and Maven
+- **Node.js 24** and npm for frontend development
+- **PostgreSQL** for the authenticated database-backed workflow
+- Optional: **Tesseract OCR** for scanned PDFs
+- Optional: Gemini API key **or** a running Ollama-compatible model for model-assisted suggestions
 
-- Java 25
-- Maven
-- Ollama with the `qwen3:4b` model for optional AI suggestions
+### Backend tests
 
-## Run locally
-
-From the project folder, run the tests:
-
-```powershell
+```bash
 mvn test
 ```
 
-Start the web application:
+### Frontend development
 
-```powershell
-mvn org.codehaus.mojo:exec-maven-plugin:3.6.4:java '-Dexec.mainClass=com.omjadon.contractanalyzer.LegalContractWebApplication'
+```bash
+cd frontend
+npm ci
+npm run lint
+npm run dev
 ```
 
-Open `http://127.0.0.1:8080` in your browser.
+For an integrated app build, run `npm run build` inside `frontend/` first, then start Spring Boot. The production Docker build performs both steps automatically.
 
-The document review works without Ollama. To use the AI suggestions, install Ollama, ensure its local service is running, and download the model:
+### Run the application locally
 
-```powershell
-& "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe" pull qwen3:4b
+The repository's Docker entrypoint uses `SPRING_PROFILES_ACTIVE=db` and converts `FOLIO_DB_URL` to a JDBC URL. For a **direct JVM run** against PostgreSQL, configure `SPRING_PROFILES_ACTIVE=db`, `FOLIO_DB_JDBC_URL`, `FOLIO_DB_USER` and `FOLIO_DB_PASSWORD` in your environment; do not commit their values.
+
+```bash
+mvn org.codehaus.mojo:exec-maven-plugin:3.6.4:java -Dexec.mainClass=com.omjadon.contractanalyzer.LegalContractWebApplication
 ```
 
-## Try the demo
+The command above is for POSIX shells. On PowerShell, quote the main-class property as `'-Dexec.mainClass=com.omjadon.contractanalyzer.LegalContractWebApplication'`. Open **http://127.0.0.1:8080**.
 
-Upload `testdata/agreement.pdf` as the Agreement and `testdata/sow.pdf` as the SOW if those generated sample files are present.
+A database-free demo mode is available for experimenting with document rules, but the complete **accounts and saved-review workflow requires PostgreSQL**. Use the `db` profile for the full product experience.
 
-The sample Agreement states 30 calendar days; the SOW states 60 calendar days. With the default 30-day demo policy, the Agreement is within policy and the SOW deviates.
+### Optional local AI (Ollama)
 
-You can change the policy limit in the upload form. For example, a 90-day limit puts both recognized sample terms within that illustrative policy.
+Start Ollama, then download a model such as:
 
-To see why AI suggestions are separate, upload `testdata/alternate-agreement.txt` with the sample SOW. The rule-based review may be incomplete, while local AI can suggest the exact 45-day sentence as a candidate.
+```bash
+ollama pull qwen3:4b
+```
 
-## API
+The default local endpoint is `http://127.0.0.1:11434`. For a hosted Ollama-compatible endpoint, configure `FOLIO_OLLAMA_URL` and, if required, `FOLIO_OLLAMA_API_KEY`. Hosted Render containers do **not** automatically include a running Ollama daemon.
 
-### Deployment readiness and monitoring
+## Environment configuration
 
-`GET /api/health` is a public, read-only readiness probe. It returns HTTP 200
-with `{"status":"UP","database":"UP"}` when the configured database is
-reachable, or HTTP 503 with a generic `DOWN` response when it is not. A
-database-free local demo reports `database: NOT_CONFIGURED`. The endpoint
-does not reveal connection details, AI keys, or document contents, and is
-always sent with `Cache-Control: no-store`.
+Set secrets in your deployment platform or local environment—**never in Git or frontend Vite variables**.
 
-For read-only post-deployment verification, run
-`node scripts/smoke-public.mjs https://your-service.onrender.com`. It checks
-readiness, frontend assets, unauthorized archive access, CSRF and security
-headers without logging in or uploading contracts. Configure an external
-uptime monitor to request `/api/health` periodically and alert on HTTP 503,
-timeouts, or missing HTTP 200 responses. Folio does **not** yet configure
-external alert delivery or measure real-world AI quality through this probe.
+| Variable | Purpose |
+| --- | --- |
+| `SPRING_PROFILES_ACTIVE=db` | Enables PostgreSQL persistence |
+| `FOLIO_DB_URL` | PostgreSQL URL used by the Docker entrypoint, e.g. `postgresql://host/database?sslmode=require` |
+| `FOLIO_DB_JDBC_URL` | JDBC connection URL for direct JVM runs |
+| `FOLIO_DB_USER` / `FOLIO_DB_PASSWORD` | Database credentials |
+| `FOLIO_AI_ENABLED` | Enables the optional AI feature on the server |
+| `FOLIO_GEMINI_API_KEY` | Server-side Gemini Developer API key |
+| `FOLIO_GEMINI_MODEL` | Optional Gemini model; code default: `gemini-2.5-flash` |
+| `FOLIO_OLLAMA_URL` | Optional Ollama-compatible model endpoint |
+| `FOLIO_OLLAMA_API_KEY` | Optional bearer token for a remote compatible endpoint |
+| `FOLIO_OLLAMA_MODEL` | Optional model; code default: `qwen3:4b` |
+| `FOLIO_DEMO_AUTH_ENABLED` | Optional *outer* HTTP Basic demo gate; keep `false` for the normal public sign-in page |
+| `FOLIO_PASSWORD_RESET_ENABLED` | Password reset capability; keep disabled unless fully configured and verified |
+| `FOLIO_PASSWORD_RECOVERY_WORKER_ENABLED` | Recovery worker; disabled by default in deployment examples |
+| `SERVER_SERVLET_SESSION_COOKIE_SECURE` | Use `true` on HTTPS deployments |
+| `SERVER_SERVLET_SESSION_COOKIE_HTTP_ONLY` | Use `true` |
+| `SERVER_SERVLET_SESSION_COOKIE_SAME_SITE` | Example: `lax` |
 
-The `Folio public deployment monitor` GitHub Action runs the public smoke check
-every six hours and can also be launched manually with a deployment URL. It
-defaults to the verified deployment `https://folio-c4no.onrender.com`; the
-repository **Actions variable** `FOLIO_PUBLIC_URL` can override that target.
-Enable GitHub Actions
-failure notifications (or a separate on-call notifier) for an actual alert;
-the workflow alone does not guarantee email/SMS delivery or minute-level
-uptime monitoring. It makes no authenticated or destructive requests.
+When both Gemini and Ollama are configured, **Gemini takes precedence**. Model requests can send extracted contract text to the configured external service; only enable them for documents whose processing is authorized. Check provider data-handling terms. Never publish connection strings, API keys, cookies or private uploads.
 
-`POST /api/review` accepts multipart fields:
+## Render deployment
 
-- `agreement`: PDF or TXT file
-- `sow`: PDF or TXT file
-- `maxDays`: optional integer from 1 to 3650; defaults to 30
+The repository provides `Dockerfile`, `render.yaml` and `render.accounts.yaml`. **Important:** Some Render blueprint settings and `PROJECT_STATE.md` describe older feature-branch preview arrangements. Inspect the actual service's selected branch, active environment variables and database before applying a blueprint; do not assume those historical descriptions represent the currently deployed service.
 
-`POST /api/ai/quotes` accepts one multipart field, `document`. It returns exact quote suggestions and any payment candidates that pass the quote checks. Configure `FOLIO_GEMINI_API_KEY` (and optionally `FOLIO_GEMINI_MODEL`, default `gemini-2.5-flash`) to use Google's Gemini Developer API from the server. Gemini takes precedence over Ollama when both are configured. Never place the key in Vite/browser environment variables or Git.
+For a database-backed instance:
 
-When hosted AI is configured, the server sends extracted document text to the external provider. Use only documents for which this processing is authorized; review the provider's data-use terms before enabling it. If the model is unavailable or returns unusable quotes, deterministic evidence-checked extraction remains available. On Render, without a configured model endpoint/key, the fallback runs immediately; a failing configured model has a brief timeout and retry cooldown. This fallback is **not** generative AI.
+1. Create a PostgreSQL database (for example, an appropriately configured managed PostgreSQL service).
+2. Create a Render **Docker Web Service** for this repository and select the intended deployment branch.
+3. Set `SPRING_PROFILES_ACTIVE=db` plus `FOLIO_DB_URL`, `FOLIO_DB_USER` and `FOLIO_DB_PASSWORD` in Render. The Docker entrypoint derives the JDBC URL and binds to `PORT`.
+4. Set `FOLIO_DEMO_AUTH_ENABLED=false` for the public registration/login UI. Enable AI only after configuring and testing the desired provider.
+5. Deploy; check `/api/health`, account login, upload, review, save, reopen and delete using test documents.
 
-## Current limits
+**Durability note:** Free hosting tiers may sleep, have quotas, or expire. A reachable homepage alone does not prove database durability, authenticated workflows, or AI-provider availability. Plan backups, restore tests, retention rules and monitoring before storing important data.
 
-- Text-based PDFs use embedded text. Fully image-only PDFs of up to 20 pages use local Tesseract OCR with English language data.
-- Tesseract must be installed on the machine running the backend. On Windows the default path is `C:\Program Files\Tesseract-OCR\tesseract.exe`; set `TESSERACT_PATH` if installed elsewhere.
-- Mixed PDFs are processed page by page: pages with embedded text keep that text, and pages without extractable text use local OCR. At most 20 pages per PDF can require OCR; blank pages also count toward this limit.
-- OCR can misread characters. Check every quoted result against the original scanned page before relying on it.
-- PDF uploads are limited to 10 MB and 100 pages; TXT uploads to 1 MB.
-- The rule-based extractor recognizes a narrow set of payment wording.
-- AI suggestions are limited to documents of 12,000 code points and depend on the local model.
-- A quote matching the source confirms its wording, not its legal meaning.
-- The policy is a user-selected demo business preference, not a legal standard.
+## API overview
 
-Read the complete original documents and verify every quote before making a decision.
+All endpoints below are served by the Spring Boot backend. Most application routes require an authenticated session. Browser requests must include the appropriate session cookies and CSRF token for state-changing calls.
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /api/health` | Public database readiness probe |
+| `GET /api/auth/csrf` | Obtain CSRF information for the SPA |
+| `POST /api/auth/register` | Create account |
+| `POST /api/auth/login` / `POST /api/auth/logout` | Begin/end session |
+| `GET /api/auth/me` | Current authenticated account |
+| `POST /api/review` | Analyze Agreement + SOW |
+| `POST /api/ai/quotes` | Optional verified payment quote suggestions |
+| `GET /api/reviews?page=0` | List current account's saved reviews |
+| `GET /api/reviews/{id}` | Read an owned saved review |
+| `DELETE /api/reviews/{id}` | Delete an owned saved review |
+
+**Review upload:** `POST /api/review` uses `multipart/form-data` with `agreement` and `sow` files and optional `maxDays` (integer **1–3650**, default **30**). `POST /api/ai/quotes` accepts multipart `document`. Consult the controller source for the complete response schema and persistence behavior; endpoints can evolve.
+
+## Verification and monitoring
+
+```bash
+# Backend unit/integration tests
+mvn test
+
+# Frontend checks
+cd frontend && npm ci && npm run lint && npm run build
+
+# Public, non-destructive deployment smoke test (from repo root)
+node scripts/smoke-public.mjs https://folio-c4no.onrender.com
+
+# Real-contract evaluation intake status (not an accuracy score)
+node scripts/prepare-real-evaluation.mjs status
+```
+
+`GET /api/health` returns HTTP **200** with `status: UP` when the app is ready, reporting `database: UP` if PostgreSQL is reachable (or `NOT_CONFIGURED` in database-free mode). It returns HTTP **503** on a configured database outage. Responses use `Cache-Control: no-store`.
+
+GitHub Actions `.github/workflows/ci.yml` runs frontend lint/build, backend verification and an authenticated end-to-end smoke flow with isolated PostgreSQL. `.github/workflows/deployment-monitor.yml` performs **public, read-only** smoke checks on a schedule (every six hours) and by manual trigger. The default target is the live demo URL; the Actions variable `FOLIO_PUBLIC_URL` can override it. **A scheduled workflow is not a substitute for configured on-call alerts or uptime guarantees.**
+
+## Supported documents and boundaries
+
+| Area | Current behavior / limitation |
+| --- | --- |
+| Inputs | Supported UTF-8 TXT or PDF Agreement and SOW |
+| File size | PDF up to **10 MiB** and **100 pages**; TXT up to **1 MiB** |
+| Scans | Local English Tesseract OCR for pages without extractable text; at most **20 OCR pages per PDF** |
+| Payments | Rule-based extraction supports a limited vocabulary and payment structures; may miss complex terms |
+| AI input | Quote-assistant input limited to **12,000 Unicode code points** |
+| Evidence | Quote matching proves textual presence, **not** legal interpretation |
+| Output | Risk indicators and illustrative policy deviations require human assessment |
+| Export | Browser print / save as PDF |
+
+OCR may misrecognize text. Always compare identified source quotations with the scanned originals. Not all payment obligations, precedence arrangements, termination mechanisms or liability exceptions are covered.
+
+## Evaluation integrity
+
+This project contains synthetic development fixtures and exploratory dataset analyses. **Do not interpret those tests as real-world accuracy, legal correctness, or generalization estimates.** The documented real-contract intake identifies two candidate SEC-filed MSA/SOW sources, but currently records **zero independently labeled real-contract pairs** and **no real-world accuracy measurement**.
+
+A defensible benchmark requires source-reuse clearance, independent blinded labeling, frozen document hashes and evaluation protocol, held-out paired agreements, error analysis and separately reported extraction/quote-verification outcomes. Details:
+
+- [Real-contract evaluation intake](docs/real-contract-evaluation-intake.md)
+- [Payment evaluation protocol](docs/payment-evaluation-protocol.md)
+- [Dataset evaluation plan](docs/dataset-evaluation-plan.md)
+- [Product evaluation and scoring scripts](scripts/)
+
+Public SEC access is not automatically permission to redistribute source documents. Keep private contracts and unreleased evaluation data out of the repository.
+
+## Security and privacy
+
+- Backend-enforced authentication for application routes; saved reviews are scoped to the owning account.
+- Spring Security session handling, SPA CSRF protection, BCrypt password hashing and authentication-rate-limit controls.
+- Upload and content limits, evidence validation, restricted error responses and security-focused test scripts.
+- Optional model providers may process extracted document text externally. Review this data flow before enabling third-party AI.
+- Demo hosting should **not** be used for confidential client contracts without an independent security, privacy, persistence and legal review.
+
+See [account/security API validation](docs/account-security-api-validation.md) for tested controls and remaining caveats. No software can be declared secure solely because smoke tests pass.
+
+## Repository map
+
+```text
+frontend/                 React application
+src/main/java/            Spring Boot API, auth, extraction, analysis
+src/main/resources/db/    Flyway PostgreSQL migrations
+testdata/                 Synthetic fixtures and development evaluations
+scripts/                  Build, smoke, validation and scoring utilities
+docs/                     Evaluation methods, security notes and audits
+.github/workflows/        CI and deployment smoke monitoring
+Dockerfile                Multi-stage deployment image
+render*.yaml              Render blueprint examples
+PROJECT_STATE.md          Historical project notes; may be stale
+```
+
+## Contributing
+
+Proposed contributions that improve **evidence fidelity, unsupported-case handling, accessibility, reliability, test coverage or independent evaluation** are welcome.
+
+1. Open an issue explaining the failing example or proposed enhancement.
+2. Add a reproducible **synthetic/redacted** test case, not a private contract.
+3. Keep deterministic review logic and model-assisted suggestions distinguishable.
+4. Run relevant Maven tests and frontend lint/build; document limits and any new environment variables.
+5. Submit a pull request describing the behavior change, evidence and remaining risks.
+
+**Responsible disclosure:** Avoid posting sensitive documents, keys or exploitable security details in public issues. Contact repository maintainers through an appropriate private channel before disclosing a security flaw.
+
+---
+
+Built as an evidence-first engineering project. **Human legal review remains essential.**
