@@ -1,6 +1,12 @@
 name: Folio public deployment monitor
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/smoke-public.mjs'
+      - 'scripts/smoke-public.test.mjs'
+      - '.github/workflows/deployment-monitor.yml'
   workflow_dispatch:
     inputs:
       deployment_url:
@@ -35,5 +41,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Test startup retry and failure handling
+        run: node scripts/smoke-public.test.mjs
       - name: Verify public app, database readiness and security headers
         run: node scripts/smoke-public.mjs "$DEPLOYMENT_URL"
