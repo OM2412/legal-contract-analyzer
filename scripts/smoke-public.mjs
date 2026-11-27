@@ -17,16 +17,57 @@ const request = async (path, options = {}) => {
   return response
 }
 
+// A sleeping deployment can take longer than one request to start.
+// Retry only readiness; later smoke/security failures must remain failures.
+const readinessBudgetMs = 120000
+async function waitForReady() {
+  const deadline = Date.now() + readinessBudgetMs
+  let lastDetail = 'no response'
+  let attempt = 0
+  while (Date.now() < deadline) {
+    attempt++
+    try {
+      const response = await request('/api/health', {
+        signal: AbortSignal.timeout(Math.min(20000, Math.max(1, deadline - Date.now()))),
+      })
+      let status
+      if (response.status === 200) {
+        try { status = await response.json() } catch {
+          lastDetail = 'HTTP 200 without valid health JSON (startup page or invalid response)'
+        }
+        if (status?.status === 'UP' && status?.database === 'UP') {
+          return { response, status }
+        }
+        if (status) lastDetail = 'Health JSON does not report application and database UP'
+      } else {
+        lastDetail = `HTTP ${response.status}`
+        await response.body?.cancel()
+        // Authentication/route errors are configuration problems, not startup.
+        if (![408, 429, 500, 502, 503, 504].includes(response.status)) {
+          throw new Error(`Non-retryable health response: ${lastDetail}`)
+        }
+      }
+    } catch (error) {
+      if (error.message.startsWith('Non-retryable')) throw error
+      lastDetail = error.message
+    }
+    const remaining = deadline - Date.now()
+    if (remaining <= 0) break
+    console.log(`WAIT Readiness attempt ${attempt}: ${lastDetail}; retrying within 120-second startup budget`)
+    await new Promise(resolve => setTimeout(resolve, Math.min(5000, remaining)))
+  }
+  throw new Error(`Application/database not ready within 120 seconds: ${lastDetail}`)
+}
+
 function check(label, pass, detail) {
   process.stdout.write(`${pass ? 'PASS' : 'FAIL'} ${label}: ${detail}\n`)
   if (!pass) failures.push(label)
 }
 
 try {
-  const health = await request('/api/health')
+  const { response: health, status } = await waitForReady()
   check('Application and database ready', health.status === 200, `HTTP ${health.status}`)
   if (health.status === 200) {
-    const status = await health.json()
     check('Health reports UP', status.status === 'UP', status.status ?? 'missing')
     check('Health response not cached',
       health.headers.get('cache-control')?.includes('no-store'),
