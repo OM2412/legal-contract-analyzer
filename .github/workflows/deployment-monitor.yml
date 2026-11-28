@@ -23,7 +23,7 @@ permissions:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 7
     env:
       DEPLOYMENT_URL: ${{ inputs.deployment_url || vars.FOLIO_PUBLIC_URL || 'https://folio-c4no.onrender.com' }}
     steps:

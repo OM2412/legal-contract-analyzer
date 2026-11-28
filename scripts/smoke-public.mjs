@@ -19,9 +19,11 @@ const request = async (path, options = {}) => {
 
 // A sleeping deployment can take longer than one request to start.
 // Retry only readiness; later smoke/security failures must remain failures.
-const readinessBudgetMs = 120000
+// Render logs show a 123-second JVM startup, excluding instance allocation.
+const readinessBudgetMs = 180000
 async function waitForReady() {
-  const deadline = Date.now() + readinessBudgetMs
+  const startedAt = Date.now()
+  const deadline = startedAt + readinessBudgetMs
   let lastDetail = 'no response'
   let attempt = 0
   while (Date.now() < deadline) {
@@ -36,6 +38,7 @@ async function waitForReady() {
           lastDetail = 'HTTP 200 without valid health JSON (startup page or invalid response)'
         }
         if (status?.status === 'UP' && status?.database === 'UP') {
+          console.log(`INFO Readiness reached after ${Math.round((Date.now() - startedAt) / 1000)} seconds (${attempt} attempt(s))`)
           return { response, status }
         }
         if (status) lastDetail = 'Health JSON does not report application and database UP'
@@ -53,10 +56,10 @@ async function waitForReady() {
     }
     const remaining = deadline - Date.now()
     if (remaining <= 0) break
-    console.log(`WAIT Readiness attempt ${attempt}: ${lastDetail}; retrying within 120-second startup budget`)
+    console.log(`WAIT Readiness attempt ${attempt}: ${lastDetail}; retrying within ${readinessBudgetMs / 1000}-second startup budget`)
     await new Promise(resolve => setTimeout(resolve, Math.min(5000, remaining)))
   }
-  throw new Error(`Application/database not ready within 120 seconds: ${lastDetail}`)
+  throw new Error(`Application/database not ready within ${readinessBudgetMs / 1000} seconds: ${lastDetail}`)
 }
 
 function check(label, pass, detail) {
